@@ -62,7 +62,7 @@ export class AuthService {
   }
 
   // Sign in with email and password
-  static async signIn({ email, password, rememberMe }: SignInData) {
+  static async signIn({ email, password }: SignInData) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -70,11 +70,6 @@ export class AuthService {
       });
 
       if (error) throw error;
-
-      // Set session persistence
-      if (rememberMe && data.session) {
-        await supabase.auth.setSession(data.session);
-      }
 
       return { data, error: null };
     } catch (error) {
@@ -88,7 +83,7 @@ export class AuthService {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
         },
       });
 
@@ -114,7 +109,7 @@ export class AuthService {
   static async resetPassword({ email }: PasswordResetData) {
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/reset-password` : undefined,
       });
 
       if (error) throw error;
@@ -145,7 +140,7 @@ export class AuthService {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      return { data: null, error: error as AuthError };
+      return { data: { session: null }, error: error as AuthError };
     }
   }
 
@@ -204,7 +199,7 @@ export class AuthService {
         .eq('user_id', userId)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       return { data, error: null };
     } catch (error) {
       return { data: null, error };

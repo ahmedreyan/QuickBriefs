@@ -387,7 +387,7 @@ export default function AppPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center py-6 bg-orange-50 rounded-lg border border-orange-200"
                       >
-                        <p className="text-orange-700 mb-4 text-base">You've used all your free credits today!</p>
+                        <p className="text-orange-700 mb-4 text-base">You&apos;ve used all your free credits today!</p>
                         <Link href="/pricing">
                           <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50">
                             <CreditCard className="w-4 h-4 mr-2" />
@@ -499,7 +499,7 @@ export default function AppPage() {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm mb-2 text-muted-foreground">
-                          <span>Today's Usage</span>
+                          <span>Today&apos;s Usage</span>
                           <span className="font-semibold">{credits.used}/{credits.total}</span>
                         </div>
                         <Progress 
