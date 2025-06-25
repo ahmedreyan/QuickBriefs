@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -12,7 +13,9 @@ const nextConfig = {
   },
   experimental: {
     esmExternals: 'loose'
-  }
+  },
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
 };
 
 module.exports = nextConfig;
