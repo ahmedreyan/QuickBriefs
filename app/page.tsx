@@ -86,27 +86,6 @@ export default function HomePage() {
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Product Manager",
-      content: "QuickBriefs has completely changed how I consume information. I can process research papers in minutes instead of hours.",
-      avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    },
-    {
-      name: "Marcus Rodriguez",
-      role: "Graduate Student",
-      content: "The student summary mode is perfect for my research. It captures exactly what I need for my literature reviews.",
-      avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    },
-    {
-      name: "Alex Thompson",
-      role: "Software Engineer",
-      content: "The Gen Z mode is actually fire - it breaks down complex tech concepts in a way that just hits different.",
-      avatar: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -329,62 +308,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">What People Are Saying</h2>
-            <p className="text-xl text-muted-foreground">
-              Join thousands who are already saving time with QuickBriefs.ai
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-1 mb-4">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 text-yellow-500 fill-current" />
-                      ))}
-                    </div>
-                    <p className="text-muted-foreground mb-6 leading-relaxed italic">
-                      "{testimonial.content}"
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={testimonial.avatar} 
-                        alt={testimonial.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-semibold text-sm">{testimonial.name}</div>
-                        <div className="text-muted-foreground text-xs">{testimonial.role}</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 bg-foreground text-background px-4 sm:px-6 lg:px-8">
+      {/* Enhanced CTA Section */}
+      <section className="py-32 bg-foreground text-background px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -396,19 +321,30 @@ export default function HomePage() {
               Ready to Save Hours Every Week?
             </h2>
             <p className="text-xl text-background/80 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Stop spending hours reading through lengthy content. Get the insights you need in seconds.
+              Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters.
             </p>
             
-            <Link href="/app">
-              <Button 
-                size="lg" 
-                variant="secondary"
-                className="px-12 py-4 text-lg"
-              >
-                Start Summarizing Now
-                <ArrowRight className="ml-3 w-6 h-6" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/app">
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="px-12 py-4 text-lg"
+                >
+                  Start Summarizing Now
+                  <ArrowRight className="ml-3 w-6 h-6" />
+                </Button>
+              </Link>
+              <Link href="/docs">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="px-12 py-4 text-lg border-background/20 text-background hover:bg-background/10"
+                >
+                  Learn More
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
