@@ -3,19 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, 
   Menu, 
   X, 
-  Search, 
-  Bell, 
   User, 
-  LogOut, 
+  Bell, 
+  Search, 
+  LogOut,
   Settings,
   CreditCard,
-  History,
   Star,
   ChevronDown
 } from 'lucide-react';
@@ -35,54 +33,44 @@ export function ResponsiveNavbar({
 }: ResponsiveNavbarProps) {
   const { user, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Close mobile menu when screen size changes
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close mobile menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setIsMobileMenuOpen(false);
       }
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Close menus when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.user-menu') && !target.closest('.user-menu-trigger')) {
-        setIsUserMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const handleSignOut = async () => {
     try {
       await signOut();
       setIsUserMenuOpen(false);
-      setIsMobileMenuOpen(false);
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
-  const navLinks = isAuthenticated ? [
-    { href: '/app', label: 'Dashboard' },
-    { href: '/docs', label: 'Docs' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/community', label: 'Community' }
-  ] : [
+  const navLinks = [
     { href: '/about', label: 'About' },
     { href: '/docs', label: 'Documentation' },
     { href: '/community', label: 'Community' },
-    { href: '/pricing', label: 'Pricing' }
+    { href: '/pricing', label: 'Pricing' },
   ];
 
   return (
@@ -90,132 +78,142 @@ export function ResponsiveNavbar({
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur-xl navbar-blur"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-background/95 backdrop-blur-xl border-b shadow-sm' 
+          : 'bg-background/80 backdrop-blur-md border-b'
+      }`}
+      style={{ maxHeight: '80px' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
-          <Link href={isAuthenticated ? "/app" : "/"} className="flex items-center space-x-3 flex-shrink-0">
-            <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-background" />
-            </div>
-            <span className="text-xl font-bold hidden sm:block">QuickBriefs.ai</span>
-            <span className="text-lg font-bold sm:hidden">QB.ai</span>
-          </Link>
+          <motion.div 
+            className="flex items-center space-x-3"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-background" />
+              </div>
+              <span className="text-xl font-bold hidden sm:block">QuickBriefs.ai</span>
+              <span className="text-lg font-bold sm:hidden">QB.ai</span>
+            </Link>
+          </motion.div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Search (Authenticated Users) */}
-            {isAuthenticated && (
-              <div className="hidden sm:block">
-                <div className="relative">
+            {!isAuthenticated ? (
+              <>
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </>
+            ) : (
+              <>
+                {/* Search Bar */}
+                <div className="relative hidden lg:block">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
+                  <input
+                    type="search"
                     placeholder="Search briefs..."
-                    className="pl-10 w-48 lg:w-64"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-64 text-sm border border-border rounded-lg bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    aria-label="Search briefs"
                   />
                 </div>
-              </div>
+
+                {/* Quick Actions */}
+                <Link href="/app">
+                  <Button size="sm" variant="ghost" className="hidden lg:flex">
+                    Dashboard
+                  </Button>
+                </Link>
+              </>
             )}
+          </div>
 
-            {/* Mobile Search Toggle */}
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="sm:hidden touch-target"
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            )}
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {!isAuthenticated ? (
+              <>
+                <Link href="/auth/login" className="hidden sm:block">
+                  <Button variant="ghost" size="sm">Sign In</Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button size="sm">Get Started</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Credits Badge */}
+                <Badge variant="outline" className="px-3 py-1 hidden sm:flex">
+                  <Star className="w-4 h-4 mr-2" />
+                  {userCredits.used}/{userCredits.total}
+                </Badge>
 
-            {/* Credits Badge (Authenticated) */}
-            {isAuthenticated && (
-              <Badge variant="outline" className="hidden sm:flex px-3 py-1">
-                <Star className="w-4 h-4 mr-2" />
-                <span className="text-xs">{userCredits.used}/{userCredits.total}</span>
-              </Badge>
-            )}
+                {/* Notifications */}
+                <div className="relative">
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="w-4 h-4" />
+                    {notifications > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {notifications}
+                      </span>
+                    )}
+                  </Button>
+                </div>
 
-            {/* Notifications (Authenticated) */}
-            {isAuthenticated && (
-              <Button variant="ghost" size="sm" className="relative touch-target">
-                <Bell className="w-4 h-4" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </Button>
-            )}
+                {/* User Menu */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="hidden lg:block text-sm font-medium max-w-32 truncate">
+                      {user?.email?.split('@')[0] || 'User'}
+                    </span>
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
 
-            {/* User Menu (Authenticated) */}
-            {isAuthenticated && user ? (
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="user-menu-trigger flex items-center space-x-2 touch-target"
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                >
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium max-w-24 truncate">
-                    {user.email?.split('@')[0]}
-                  </span>
-                  <ChevronDown className="w-4 h-4 hidden sm:block" />
-                </Button>
-
-                {/* User Dropdown */}
-                <AnimatePresence>
-                  {isUserMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="user-menu absolute right-0 mt-2 w-56 bg-background border rounded-lg shadow-lg py-2"
-                    >
-                      <div className="px-4 py-2 border-b">
-                        <p className="text-sm font-medium">{user.email}</p>
-                        <p className="text-xs text-muted-foreground">Free Plan</p>
-                      </div>
-                      
-                      <Link href="/app" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
-                        <User className="w-4 h-4 mr-3" />
-                        Dashboard
-                      </Link>
-                      
-                      <Link href="/pricing" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
-                        <CreditCard className="w-4 h-4 mr-3" />
-                        Upgrade Plan
-                      </Link>
-                      
-                      <Link href="/app" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
-                        <History className="w-4 h-4 mr-3" />
-                        History
-                      </Link>
-                      
-                      <Link href="/app" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
-                        <Settings className="w-4 h-4 mr-3" />
-                        Settings
-                      </Link>
-                      
-                      <div className="border-t mt-2 pt-2">
+                  {/* User Dropdown */}
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg py-2"
+                      >
+                        <div className="px-4 py-2 border-b border-border">
+                          <p className="text-sm font-medium truncate">{user?.email}</p>
+                          <p className="text-xs text-muted-foreground">Free Plan</p>
+                        </div>
+                        <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
+                          <User className="w-4 h-4 mr-3" />
+                          Profile
+                        </Link>
+                        <Link href="/pricing" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
+                          <CreditCard className="w-4 h-4 mr-3" />
+                          Upgrade
+                        </Link>
+                        <Link href="/settings" className="flex items-center px-4 py-2 text-sm hover:bg-muted">
+                          <Settings className="w-4 h-4 mr-3" />
+                          Settings
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="flex items-center w-full px-4 py-2 text-sm hover:bg-muted text-red-600"
@@ -223,54 +221,26 @@ export function ResponsiveNavbar({
                           <LogOut className="w-4 h-4 mr-3" />
                           Sign Out
                         </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              /* Auth Buttons (Not Authenticated) */
-              <div className="hidden sm:flex items-center space-x-2">
-                <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">Sign In</Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button size="sm">Get Started</Button>
-                </Link>
-              </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
             )}
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden touch-target"
+              className="md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
-
-        {/* Mobile Search Bar */}
-        <AnimatePresence>
-          {isSearchOpen && isAuthenticated && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="sm:hidden border-t py-3"
-            >
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search briefs..."
-                  className="pl-10 w-full"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Mobile Menu */}
         <AnimatePresence>
@@ -279,68 +249,75 @@ export function ResponsiveNavbar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t mobile-menu-enter"
+              className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl"
             >
-              <div className="py-4 space-y-4">
-                {/* Credits (Mobile) */}
+              <div className="px-4 py-4 space-y-4">
+                {/* Mobile Search */}
                 {isAuthenticated && (
-                  <div className="px-4">
-                    <Badge variant="outline" className="w-full justify-center py-2">
-                      <Star className="w-4 h-4 mr-2" />
-                      Credits: {userCredits.used}/{userCredits.total}
-                    </Badge>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="search"
+                      placeholder="Search briefs..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 w-full text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                      aria-label="Search briefs"
+                    />
                   </div>
                 )}
 
-                {/* Navigation Links */}
+                {/* Mobile Navigation Links */}
                 <div className="space-y-2">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="block px-4 py-2 text-base font-medium hover:bg-muted transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  {!isAuthenticated ? (
+                    <>
+                      {navLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                      <div className="pt-4 space-y-2">
+                        <Link href="/auth/login" className="block">
+                          <Button variant="ghost" className="w-full justify-start">
+                            Sign In
+                          </Button>
+                        </Link>
+                        <Link href="/auth/signup" className="block">
+                          <Button className="w-full">Get Started</Button>
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/app" className="block">
+                        <Button variant="ghost" className="w-full justify-start">
+                          Dashboard
+                        </Button>
+                      </Link>
+                      <Link href="/pricing" className="block">
+                        <Button variant="ghost" className="w-full justify-start">
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Upgrade Plan
+                        </Button>
+                      </Link>
+                      <div className="pt-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          onClick={handleSignOut}
+                          className="w-full justify-start text-red-600"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
-
-                {/* Auth Buttons (Not Authenticated) */}
-                {!isAuthenticated && (
-                  <div className="px-4 space-y-2 border-t pt-4">
-                    <Link href="/auth/login" className="block">
-                      <Button variant="outline" className="w-full touch-target">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link href="/auth/signup" className="block">
-                      <Button className="w-full touch-target">
-                        Get Started
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-
-                {/* User Actions (Authenticated) */}
-                {isAuthenticated && (
-                  <div className="px-4 space-y-2 border-t pt-4">
-                    <Link href="/pricing" className="block">
-                      <Button variant="outline" className="w-full justify-start touch-target">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Upgrade Plan
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 touch-target"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  </div>
-                )}
               </div>
             </motion.div>
           )}

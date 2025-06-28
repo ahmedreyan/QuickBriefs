@@ -19,7 +19,6 @@ import {
   Clock, 
   User,
   CreditCard,
-  History,
   Copy,
   Download,
   RefreshCw,
@@ -29,9 +28,7 @@ import {
   GraduationCap,
   Briefcase,
   Users,
-  LogOut,
-  TrendingUp,
-  Brain
+  LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,7 +45,7 @@ export default function AppPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const [summaryData, setSummaryData] = useState<any>(null);
-  const [credits, setCredits] = useState({ used: 2, total: 3 });
+  const [credits, setCredits] = useState({ used: 0, total: 3 });
   const [totalSummaries, setTotalSummaries] = useState(0);
   const [error, setError] = useState('');
 
@@ -119,22 +116,31 @@ export default function AppPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully');
+    } catch (error) {
+      toast.error('Failed to sign out');
+    }
+  };
+
   const inputTypes = [
     {
       id: 'url',
-      icon: <Globe className="w-5 h-5 sm:w-6 sm:h-6" />,
+      icon: <Globe className="w-6 h-6" />,
       title: 'URL/Blog',
       description: 'Extract from any website'
     },
     {
       id: 'youtube',
-      icon: <Youtube className="w-5 h-5 sm:w-6 sm:h-6" />,
+      icon: <Youtube className="w-6 h-6" />,
       title: 'YouTube',
       description: 'Analyze video transcripts'
     },
     {
       id: 'upload',
-      icon: <Upload className="w-5 h-5 sm:w-6 sm:h-6" />,
+      icon: <Upload className="w-6 h-6" />,
       title: 'Upload',
       description: 'Process documents & text'
     }
@@ -145,21 +151,21 @@ export default function AppPage() {
       id: 'business',
       title: 'Business Brief',
       description: 'Strategic insights & actions',
-      icon: <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />,
+      icon: <Briefcase className="w-5 h-5" />,
       audience: 'Business professionals'
     },
     {
       id: 'student',
       title: 'Student Summary',
       description: 'Educational & study-friendly',
-      icon: <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />,
+      icon: <GraduationCap className="w-5 h-5" />,
       audience: 'Students'
     },
     {
       id: 'genZ',
       title: 'Gen Z Style',
       description: 'Casual & relatable tone',
-      icon: <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
+      icon: <Users className="w-5 h-5" />,
       audience: 'Gen Z'
     }
   ];
@@ -196,19 +202,19 @@ export default function AppPage() {
           notifications={0}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
-          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+          <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content Area */}
-            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+            <div className="lg:col-span-2 space-y-8">
               {/* Welcome Section */}
               <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8 }}
-                className="text-center py-6 sm:py-8"
+                className="text-center py-8"
               >
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">AI Content Summarization</h1>
-                <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-4">AI Content Summarization</h1>
+                <p className="text-lg sm:text-xl text-muted-foreground">
                   Transform any content into intelligent summaries tailored to your audience
                 </p>
               </motion.div>
@@ -221,8 +227,8 @@ export default function AppPage() {
               >
                 <Card className="shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg sm:text-xl md:text-2xl">
-                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+                    <CardTitle className="flex items-center gap-3 text-xl sm:text-2xl">
+                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
                       Generate Summary
                     </CardTitle>
                   </CardHeader>
@@ -232,18 +238,18 @@ export default function AppPage() {
                       <Label className="text-base font-semibold mb-4 block">
                         Choose Content Source
                       </Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {inputTypes.map((type) => (
                           <Button
                             key={type.id}
                             variant={inputType === type.id ? 'default' : 'outline'}
                             onClick={() => setInputType(type.id)}
-                            className="flex flex-col items-center p-3 sm:p-4 h-auto space-y-2 touch-target"
+                            className="flex flex-col items-center p-4 h-auto space-y-2 touch-target"
                           >
                             {type.icon}
                             <div className="text-center">
-                              <div className="font-semibold text-xs sm:text-sm">{type.title}</div>
-                              <div className="text-xs opacity-80 hidden sm:block">{type.description}</div>
+                              <div className="font-semibold text-sm">{type.title}</div>
+                              <div className="text-xs opacity-80">{type.description}</div>
                             </div>
                           </Button>
                         ))}
@@ -314,15 +320,15 @@ export default function AppPage() {
                             key={mode.id}
                             variant={summaryMode === mode.id ? 'default' : 'outline'}
                             onClick={() => setSummaryMode(mode.id)}
-                            className="flex flex-col items-center p-3 sm:p-4 h-auto space-y-2 text-left touch-target"
+                            className="flex flex-col items-center p-4 h-auto space-y-2 text-left touch-target"
                           >
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                               {mode.icon}
                             </div>
                             <div className="text-center">
-                              <div className="font-semibold text-xs sm:text-sm">{mode.title}</div>
-                              <div className="text-xs opacity-80 hidden sm:block">{mode.description}</div>
-                              <div className="text-xs text-muted-foreground mt-1 hidden sm:block">{mode.audience}</div>
+                              <div className="font-semibold text-sm">{mode.title}</div>
+                              <div className="text-xs opacity-80">{mode.description}</div>
+                              <div className="text-xs text-muted-foreground mt-1">{mode.audience}</div>
                             </div>
                           </Button>
                         ))}
@@ -345,12 +351,12 @@ export default function AppPage() {
                     >
                       {isLoading ? (
                         <>
-                          <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-3 animate-spin" />
+                          <RefreshCw className="w-5 h-5 mr-3 animate-spin" />
                           Generating Summary...
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-3" />
+                          <Sparkles className="w-5 h-5 mr-3" />
                           Generate Summary ({credits.total - credits.used} credits left)
                         </>
                       )}
@@ -364,7 +370,7 @@ export default function AppPage() {
                       >
                         <p className="text-orange-700 mb-4 text-base">You&apos;ve used all your free credits today!</p>
                         <Link href="/pricing">
-                          <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50 touch-target">
+                          <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50">
                             <CreditCard className="w-4 h-4 mr-2" />
                             Upgrade for More Credits
                           </Button>
@@ -385,8 +391,8 @@ export default function AppPage() {
                   <Card className="shadow-lg">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
-                          <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <CardTitle className="flex items-center gap-3 text-xl">
+                          <FileText className="w-6 h-6" />
                           Your Summary
                         </CardTitle>
                         <div className="flex gap-2">
@@ -400,11 +406,11 @@ export default function AppPage() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-muted/30 p-4 sm:p-6 rounded-lg border">
-                        <p className="leading-relaxed text-sm sm:text-base">{summary}</p>
+                      <div className="bg-muted/30 p-6 rounded-lg border">
+                        <p className="leading-relaxed text-base">{summary}</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t gap-4">
-                        <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                        <div className="flex gap-2">
                           <Badge variant="outline">
                             {summaryModes.find(m => m.id === summaryMode)?.title}
                           </Badge>
@@ -433,7 +439,7 @@ export default function AppPage() {
               >
                 <Card className="shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg">
+                    <CardTitle className="flex items-center gap-3">
                       <BarChart3 className="w-5 h-5" />
                       Live Statistics
                     </CardTitle>
@@ -465,7 +471,7 @@ export default function AppPage() {
               >
                 <Card className="shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg">
+                    <CardTitle className="flex items-center gap-3">
                       <CreditCard className="w-5 h-5" />
                       Daily Credits
                     </CardTitle>
