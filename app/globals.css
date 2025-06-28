@@ -82,32 +82,37 @@
   }
 }
 
-/* Enhanced Responsive Design */
+/* Enhanced Mobile-First Responsive Design */
 @layer utilities {
-  /* Mobile-first breakpoints */
-  .container-mobile {
+  /* Touch-friendly targets - CRITICAL for mobile */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* Mobile-first container system */
+  .container-responsive {
     @apply w-full px-4;
   }
   
   @media (min-width: 481px) {
-    .container-mobile {
+    .container-responsive {
       @apply px-6;
     }
   }
   
   @media (min-width: 769px) {
-    .container-mobile {
+    .container-responsive {
       @apply px-8;
     }
   }
   
   @media (min-width: 1025px) {
-    .container-mobile {
+    .container-responsive {
       @apply px-12;
     }
   }
 
-  /* Responsive text sizes */
+  /* Responsive text scaling */
   .text-responsive-xs {
     @apply text-xs;
   }
@@ -154,28 +159,54 @@
     }
   }
 
-  /* Touch-friendly targets */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  /* Fluid layouts */
-  .fluid-grid {
-    @apply grid gap-4;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  /* Responsive spacing */
+  .spacing-responsive {
+    @apply space-y-4;
   }
   
   @media (min-width: 481px) {
-    .fluid-grid {
-      @apply gap-6;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    .spacing-responsive {
+      @apply space-y-6;
     }
   }
   
   @media (min-width: 769px) {
-    .fluid-grid {
-      @apply gap-8;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    .spacing-responsive {
+      @apply space-y-8;
+    }
+  }
+
+  /* Responsive padding */
+  .padding-responsive {
+    @apply p-4;
+  }
+  
+  @media (min-width: 481px) {
+    .padding-responsive {
+      @apply p-6;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .padding-responsive {
+      @apply p-8;
+    }
+  }
+
+  /* Responsive margins */
+  .margin-responsive {
+    @apply m-4;
+  }
+  
+  @media (min-width: 481px) {
+    .margin-responsive {
+      @apply m-6;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .margin-responsive {
+      @apply m-8;
     }
   }
 }
@@ -264,6 +295,153 @@
   }
 }
 
+/* Navbar specific styles */
+.navbar-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Mobile menu animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Button interactions */
+.button-press {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Enhanced form inputs */
+.input-focus {
+  @apply ring-2 ring-primary ring-opacity-50 border-primary;
+}
+
+/* Loading states */
+@keyframes skeleton {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton 1.5s infinite;
+}
+
+/* Responsive image containers */
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Content loading states */
+.content-loading {
+  @apply animate-pulse bg-muted rounded;
+}
+
+/* Error states */
+.error-state {
+  @apply border-red-200 bg-red-50 text-red-700;
+}
+
+/* Success states */
+.success-state {
+  @apply border-green-200 bg-green-50 text-green-700;
+}
+
+/* Warning states */
+.warning-state {
+  @apply border-yellow-200 bg-yellow-50 text-yellow-700;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 480px) {
+  /* Ensure proper spacing on very small screens */
+  .container {
+    @apply px-3;
+  }
+  
+  /* Larger touch targets for mobile */
+  button, 
+  .touch-target,
+  input[type="button"],
+  input[type="submit"] {
+    @apply min-h-[48px] min-w-[48px];
+  }
+  
+  /* Better text sizing for mobile */
+  h1 {
+    @apply text-2xl;
+  }
+  
+  h2 {
+    @apply text-xl;
+  }
+  
+  h3 {
+    @apply text-lg;
+  }
+  
+  /* Improved form elements */
+  input,
+  textarea,
+  select {
+    @apply text-base; /* Prevents zoom on iOS */
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 481px) and (max-width: 768px) {
+  .grid-responsive {
+    @apply grid-cols-2;
+  }
+}
+
+/* Desktop improvements */
+@media (min-width: 769px) {
+  .grid-responsive {
+    @apply grid-cols-3;
+  }
+  
+  /* Hover effects only on non-touch devices */
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
 /* Gradient text animations */
 @keyframes gradient-x {
   0%, 100% {
@@ -324,95 +502,4 @@
   animation: shimmer 2s infinite;
   -webkit-background-clip: text;
   background-clip: text;
-}
-
-/* Loading states */
-@keyframes skeleton {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: skeleton 1.5s infinite;
-}
-
-/* Improved button interactions */
-.button-press {
-  transform: scale(0.98);
-  transition: transform 0.1s ease;
-}
-
-/* Enhanced form inputs */
-.input-focus {
-  @apply ring-2 ring-primary ring-opacity-50 border-primary;
-}
-
-/* Navbar specific styles */
-.navbar-blur {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* Mobile menu animations */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.mobile-menu-enter {
-  animation: slideDown 0.2s ease-out;
-}
-
-/* Responsive image containers */
-.aspect-ratio-16-9 {
-  aspect-ratio: 16 / 9;
-}
-
-.aspect-ratio-4-3 {
-  aspect-ratio: 4 / 3;
-}
-
-.aspect-ratio-1-1 {
-  aspect-ratio: 1 / 1;
-}
-
-/* Performance optimizations */
-.will-change-transform {
-  will-change: transform;
-}
-
-.will-change-opacity {
-  will-change: opacity;
-}
-
-/* Content loading states */
-.content-loading {
-  @apply animate-pulse bg-muted rounded;
-}
-
-/* Error states */
-.error-state {
-  @apply border-red-200 bg-red-50 text-red-700;
-}
-
-/* Success states */
-.success-state {
-  @apply border-green-200 bg-green-50 text-green-700;
-}
-
-/* Warning states */
-.warning-state {
-  @apply border-yellow-200 bg-yellow-50 text-yellow-700;
 }
