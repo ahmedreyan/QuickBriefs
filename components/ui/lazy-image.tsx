@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface LazyImageProps {
   src: string;
   alt: string;
   className?: string;
+  width?: number;
+  height?: number;
   placeholder?: string;
-  sizes?: string;
-  srcSet?: string;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -17,10 +17,10 @@ interface LazyImageProps {
 export function LazyImage({
   src,
   alt,
-  className,
-  placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y0ZjRmNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0cHgiIGZpbGw9IiM5OTk5OTkiPkxvYWRpbmcuLi48L3RleHQ+PC9zdmc+',
-  sizes,
-  srcSet,
+  className = '',
+  width,
+  height,
+  placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvYWRpbmcuLi48L3RleHQ+PC9zdmc+',
   onLoad,
   onError
 }: LazyImageProps) {
@@ -28,6 +28,7 @@ export function LazyImage({
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const [currentSrc, setCurrentSrc] = useState(placeholder);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -50,58 +51,93 @@ export function LazyImage({
     return () => observer.disconnect();
   }, []);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
+  useEffect(() => {
+    if (isInView && !isLoaded && !hasError) {
+      const img = new Image();
+      
+      img.onload = () => {
+        setCurrentSrc(src);
+        setIsLoaded(true);
+        onLoad?.();
+      };
+      
+      img.onerror = () => {
+        setHasError(true);
+        onError?.();
+      };
 
-  const handleError = () => {
-    setHasError(true);
-    onError?.();
+      // Support for responsive images
+      if (src.includes('srcset=')) {
+        const srcsetMatch = src.match(/srcset=([^&]+)/);
+        if (srcsetMatch) {
+          img.srcset = decodeURIComponent(srcsetMatch[1]);
+        }
+      }
+      
+      img.src = src;
+    }
+  }, [isInView, src, isLoaded, hasError, onLoad, onError]);
+
+  const getWebPSrc = (originalSrc: string) => {
+    // Convert to WebP if supported
+    if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
+      return originalSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return originalSrc;
   };
 
   return (
-    <div className={cn('relative overflow-hidden', className)}>
-      {/* Placeholder */}
-      {!isLoaded && !hasError && (
-        <img
-          src={placeholder}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover blur-sm"
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Actual Image */}
+    <motion.div
+      className={`relative overflow-hidden ${className}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <img
         ref={imgRef}
-        src={isInView ? src : placeholder}
-        srcSet={isInView ? srcSet : undefined}
-        sizes={sizes}
+        src={currentSrc}
         alt={alt}
+        width={width}
+        height={height}
+        className={`transition-opacity duration-300 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        } ${className}`}
         loading="lazy"
-        className={cn(
-          'w-full h-full object-cover transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0',
-          hasError && 'hidden'
-        )}
-        onLoad={handleLoad}
-        onError={handleError}
+        decoding="async"
+        onLoad={() => {
+          if (currentSrc !== placeholder) {
+            setIsLoaded(true);
+            onLoad?.();
+          }
+        }}
+        onError={() => {
+          setHasError(true);
+          onError?.();
+        }}
       />
-
-      {/* Error State */}
+      
+      {/* Loading skeleton */}
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+          <div className="text-muted-foreground text-sm">Loading...</div>
+        </div>
+      )}
+      
+      {/* Error state */}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
-          <span className="text-muted-foreground text-sm">Failed to load image</span>
+        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+          <div className="text-muted-foreground text-sm">Failed to load image</div>
         </div>
       )}
-
-      {/* Loading Indicator */}
-      {!isLoaded && !hasError && isInView && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+      
+      {/* Progressive enhancement overlay */}
+      {isLoaded && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+        />
       )}
-    </div>
+    </motion.div>
   );
 }
