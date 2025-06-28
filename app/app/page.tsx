@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ResponsiveNavbar } from '@/components/ui/responsive-navbar';
 import { motion } from 'framer-motion';
 import { 
   Zap, 
@@ -32,6 +33,8 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { EmailValidationService } from '@/lib/email-validation';
+import { SecurityService } from '@/lib/security';
 import { toast } from 'sonner';
 
 export default function AppPage() {
@@ -47,6 +50,9 @@ export default function AppPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Security initialization
+    SecurityService.enforceHTTPS();
+    
     // Animate total summaries counter
     let start = 0;
     const target = 2847;
@@ -66,6 +72,12 @@ export default function AppPage() {
 
   const handleGenerate = async () => {
     if (credits.used >= credits.total || !content.trim()) return;
+    
+    // Validate input based on type
+    if (inputType === 'url' && !SecurityService.validateInput(content, 'url')) {
+      setError('Please enter a valid URL');
+      return;
+    }
     
     setIsLoading(true);
     setError('');
@@ -184,44 +196,13 @@ export default function AppPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
         {/* Navigation */}
-        <motion.nav 
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="border-b bg-background/80 backdrop-blur-xl sticky top-0 z-50"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-background" />
-                </div>
-                <span className="text-xl font-bold">QuickBriefs.ai</span>
-              </Link>
-              <div className="flex items-center space-x-4">
-                <Badge variant="outline" className="px-3 py-1">
-                  <Star className="w-4 h-4 mr-2" />
-                  {credits.used}/{credits.total} Credits Used
-                </Badge>
-                {user && (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-medium">{user.email}</span>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                      <LogOut className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.nav>
+        <ResponsiveNavbar 
+          isAuthenticated={true}
+          userCredits={credits}
+          notifications={0}
+        />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content Area */}
             <div className="lg:col-span-2 space-y-8">
@@ -229,11 +210,11 @@ export default function AppPage() {
               <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.8 }}
                 className="text-center py-8"
               >
-                <h1 className="text-4xl font-bold mb-4">AI Content Summarization</h1>
-                <p className="text-xl text-muted-foreground">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-4">AI Content Summarization</h1>
+                <p className="text-lg sm:text-xl text-muted-foreground">
                   Transform any content into intelligent summaries tailored to your audience
                 </p>
               </motion.div>
@@ -246,8 +227,8 @@ export default function AppPage() {
               >
                 <Card className="shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-2xl">
-                      <Sparkles className="w-7 h-7" />
+                    <CardTitle className="flex items-center gap-3 text-xl sm:text-2xl">
+                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
                       Generate Summary
                     </CardTitle>
                   </CardHeader>
@@ -257,13 +238,13 @@ export default function AppPage() {
                       <Label className="text-base font-semibold mb-4 block">
                         Choose Content Source
                       </Label>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {inputTypes.map((type) => (
                           <Button
                             key={type.id}
                             variant={inputType === type.id ? 'default' : 'outline'}
                             onClick={() => setInputType(type.id)}
-                            className="flex flex-col items-center p-4 h-auto space-y-2"
+                            className="flex flex-col items-center p-4 h-auto space-y-2 touch-target"
                           >
                             {type.icon}
                             <div className="text-center">
@@ -333,13 +314,13 @@ export default function AppPage() {
                       <Label className="text-base font-semibold mb-4 block">
                         Summary Format
                       </Label>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         {summaryModes.map((mode) => (
                           <Button
                             key={mode.id}
                             variant={summaryMode === mode.id ? 'default' : 'outline'}
                             onClick={() => setSummaryMode(mode.id)}
-                            className="flex flex-col items-center p-4 h-auto space-y-2 text-left"
+                            className="flex flex-col items-center p-4 h-auto space-y-2 text-left touch-target"
                           >
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                               {mode.icon}
@@ -365,7 +346,7 @@ export default function AppPage() {
                     <Button
                       onClick={handleGenerate}
                       disabled={!content.trim() || isLoading || credits.used >= credits.total}
-                      className="w-full py-3 text-base"
+                      className="w-full py-3 text-base touch-target"
                       size="lg"
                     >
                       {isLoading ? (
@@ -415,10 +396,10 @@ export default function AppPage() {
                           Your Summary
                         </CardTitle>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                          <Button variant="outline" size="sm" onClick={copyToClipboard} className="touch-target">
                             <Copy className="w-4 h-4" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={downloadSummary}>
+                          <Button variant="outline" size="sm" onClick={downloadSummary} className="touch-target">
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>
@@ -466,15 +447,15 @@ export default function AppPage() {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="text-center">
-                        <div className="text-3xl font-bold mb-1">{totalSummaries.toLocaleString()}</div>
+                        <div className="text-2xl sm:text-3xl font-bold mb-1">{totalSummaries.toLocaleString()}</div>
                         <div className="text-sm text-muted-foreground">Total Summaries Generated</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold mb-1">1,203</div>
+                        <div className="text-xl sm:text-2xl font-bold mb-1">1,203</div>
                         <div className="text-sm text-muted-foreground">Active Users Today</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold mb-1 text-green-600">156 hrs</div>
+                        <div className="text-xl sm:text-2xl font-bold mb-1 text-green-600">156 hrs</div>
                         <div className="text-sm text-muted-foreground">Time Saved Today</div>
                       </div>
                     </div>
@@ -511,7 +492,7 @@ export default function AppPage() {
                         Free credits reset daily at midnight. Upgrade for unlimited access and premium features.
                       </p>
                       <Link href="/pricing">
-                        <Button className="w-full">
+                        <Button className="w-full touch-target">
                           <Star className="w-4 h-4 mr-2" />
                           Get Unlimited Access
                         </Button>

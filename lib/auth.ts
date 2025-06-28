@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { User, Session, AuthError } from '@supabase/supabase-js';
+import { EmailValidationService, RateLimiter } from './email-validation';
 
 export interface AuthState {
   user: User | null;
@@ -31,11 +32,29 @@ export interface PasswordUpdateData {
 }
 
 export class AuthService {
-  // Sign up with email and password
+  // Enhanced sign up with email validation
   static async signUp({ email, password, username, fullName }: SignUpData) {
     try {
+      // Validate email
+      const emailValidation = EmailValidationService.validateEmail(email);
+      if (!emailValidation.isValid) {
+        throw new Error(emailValidation.errors[0]);
+      }
+
+      // Check rate limiting
+      if (!RateLimiter.canAttempt(email)) {
+        const remainingTime = Math.ceil(RateLimiter.getRemainingTime(email) / 1000);
+        throw new Error(`Too many attempts. Please wait ${remainingTime} seconds.`);
+      }
+
+      // Validate password strength
+      const passwordValidation = this.validatePassword(password);
+      if (!passwordValidation.isValid) {
+        throw new Error('Password does not meet security requirements');
+      }
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: EmailValidationService.normalizeEmail(email),
         password,
         options: {
           data: {
@@ -61,11 +80,19 @@ export class AuthService {
     }
   }
 
-  // Sign in with email and password
+  // Enhanced sign in with rate limiting
   static async signIn({ email, password }: SignInData) {
     try {
+      const normalizedEmail = EmailValidationService.normalizeEmail(email);
+
+      // Check rate limiting
+      if (!RateLimiter.canAttempt(normalizedEmail)) {
+        const remainingTime = Math.ceil(RateLimiter.getRemainingTime(normalizedEmail) / 1000);
+        throw new Error(`Too many login attempts. Please wait ${remainingTime} seconds.`);
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
@@ -77,13 +104,17 @@ export class AuthService {
     }
   }
 
-  // Sign in with Google OAuth
+  // Enhanced Google OAuth with security checks
   static async signInWithGoogle() {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
@@ -94,9 +125,15 @@ export class AuthService {
     }
   }
 
-  // Sign out
+  // Sign out with cleanup
   static async signOut() {
     try {
+      // Clear any stored session data
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return { error: null };
@@ -105,10 +142,17 @@ export class AuthService {
     }
   }
 
-  // Reset password
+  // Enhanced password reset with validation
   static async resetPassword({ email }: PasswordResetData) {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      const emailValidation = EmailValidationService.validateEmail(email);
+      if (!emailValidation.isValid) {
+        throw new Error(emailValidation.errors[0]);
+      }
+
+      const normalizedEmail = EmailValidationService.normalizeEmail(email);
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/reset-password` : undefined,
       });
 
@@ -119,9 +163,14 @@ export class AuthService {
     }
   }
 
-  // Update password
+  // Enhanced password update with validation
   static async updatePassword({ password }: { password: string }) {
     try {
+      const passwordValidation = this.validatePassword(password);
+      if (!passwordValidation.isValid) {
+        throw new Error('Password does not meet security requirements');
+      }
+
       const { data, error } = await supabase.auth.updateUser({
         password,
       });
@@ -166,7 +215,7 @@ export class AuthService {
     }
   }
 
-  // Create user profile
+  // Create user profile with enhanced data
   static async createUserProfile(userId: string, metadata: any) {
     try {
       const { data, error } = await supabase
@@ -221,7 +270,7 @@ export class AuthService {
     }
   }
 
-  // Validate password strength
+  // Enhanced password validation
   static validatePassword(password: string): {
     isValid: boolean;
     score: number;
@@ -230,9 +279,13 @@ export class AuthService {
     const feedback: string[] = [];
     let score = 0;
 
+    // Length check
     if (password.length >= 8) score += 1;
     else feedback.push('At least 8 characters');
 
+    if (password.length >= 12) score += 1;
+
+    // Character variety checks
     if (/[A-Z]/.test(password)) score += 1;
     else feedback.push('One uppercase letter');
 
@@ -245,8 +298,20 @@ export class AuthService {
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1;
     else feedback.push('One special character');
 
+    // Additional security checks
+    if (!/(.)\1{2,}/.test(password)) score += 1; // No repeated characters
+    else feedback.push('Avoid repeated characters');
+
+    // Common password patterns
+    const commonPatterns = ['123456', 'password', 'qwerty', 'abc123'];
+    if (!commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+      score += 1;
+    } else {
+      feedback.push('Avoid common password patterns');
+    }
+
     return {
-      isValid: score >= 5,
+      isValid: score >= 6,
       score,
       feedback,
     };
@@ -254,8 +319,7 @@ export class AuthService {
 
   // Validate email
   static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return EmailValidationService.validateEmail(email).isValid;
   }
 
   // Validate username
@@ -263,44 +327,13 @@ export class AuthService {
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     return usernameRegex.test(username);
   }
-}
 
-// Rate limiting utility
-export class RateLimiter {
-  private static attempts: Map<string, { count: number; lastAttempt: number }> = new Map();
-  private static readonly MAX_ATTEMPTS = 3;
-  private static readonly WINDOW_MS = 60 * 1000; // 1 minute
-
-  static canAttempt(identifier: string): boolean {
-    const now = Date.now();
-    const record = this.attempts.get(identifier);
-
-    if (!record) {
-      this.attempts.set(identifier, { count: 1, lastAttempt: now });
-      return true;
-    }
-
-    // Reset if window has passed
-    if (now - record.lastAttempt > this.WINDOW_MS) {
-      this.attempts.set(identifier, { count: 1, lastAttempt: now });
-      return true;
-    }
-
-    // Check if under limit
-    if (record.count < this.MAX_ATTEMPTS) {
-      record.count++;
-      record.lastAttempt = now;
-      return true;
-    }
-
-    return false;
-  }
-
-  static getRemainingTime(identifier: string): number {
-    const record = this.attempts.get(identifier);
-    if (!record) return 0;
-
-    const elapsed = Date.now() - record.lastAttempt;
-    return Math.max(0, this.WINDOW_MS - elapsed);
+  // Check for suspicious login activity
+  static detectSuspiciousActivity(email: string): boolean {
+    const attempts = RateLimiter.getAttemptCount(email);
+    return attempts >= 2; // Flag after 2 attempts
   }
 }
+
+// Enhanced Rate limiting utility with more sophisticated tracking
+export { RateLimiter } from './email-validation';

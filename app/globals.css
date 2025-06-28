@@ -82,13 +82,113 @@
   }
 }
 
+/* Enhanced Responsive Design */
+@layer utilities {
+  /* Mobile-first breakpoints */
+  .container-mobile {
+    @apply w-full px-4;
+  }
+  
+  @media (min-width: 481px) {
+    .container-mobile {
+      @apply px-6;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .container-mobile {
+      @apply px-8;
+    }
+  }
+  
+  @media (min-width: 1025px) {
+    .container-mobile {
+      @apply px-12;
+    }
+  }
+
+  /* Responsive text sizes */
+  .text-responsive-xs {
+    @apply text-xs;
+  }
+  
+  @media (min-width: 481px) {
+    .text-responsive-xs {
+      @apply text-sm;
+    }
+  }
+  
+  .text-responsive-sm {
+    @apply text-sm;
+  }
+  
+  @media (min-width: 481px) {
+    .text-responsive-sm {
+      @apply text-base;
+    }
+  }
+  
+  .text-responsive-base {
+    @apply text-base;
+  }
+  
+  @media (min-width: 481px) {
+    .text-responsive-base {
+      @apply text-lg;
+    }
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg;
+  }
+  
+  @media (min-width: 481px) {
+    .text-responsive-lg {
+      @apply text-xl;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .text-responsive-lg {
+      @apply text-2xl;
+    }
+  }
+
+  /* Touch-friendly targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Fluid layouts */
+  .fluid-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  @media (min-width: 481px) {
+    .fluid-grid {
+      @apply gap-6;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .fluid-grid {
+      @apply gap-8;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -100,11 +200,21 @@
   background: linear-gradient(to bottom, #7C3AED, #2563EB);
 }
 
-/* Smooth animations */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Smooth animations with reduced motion support */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Glass morphism effects */
@@ -118,6 +228,40 @@
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Focus indicators for accessibility */
+.focus-visible:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .text-muted-foreground {
+    @apply text-foreground;
+  }
+  
+  .border-border {
+    @apply border-foreground;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .shadow-lg,
+  .shadow-md,
+  .shadow-sm {
+    box-shadow: none !important;
+  }
 }
 
 /* Gradient text animations */
@@ -180,4 +324,95 @@
   animation: shimmer 2s infinite;
   -webkit-background-clip: text;
   background-clip: text;
+}
+
+/* Loading states */
+@keyframes skeleton {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton 1.5s infinite;
+}
+
+/* Improved button interactions */
+.button-press {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Enhanced form inputs */
+.input-focus {
+  @apply ring-2 ring-primary ring-opacity-50 border-primary;
+}
+
+/* Navbar specific styles */
+.navbar-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Mobile menu animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Responsive image containers */
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Content loading states */
+.content-loading {
+  @apply animate-pulse bg-muted rounded;
+}
+
+/* Error states */
+.error-state {
+  @apply border-red-200 bg-red-50 text-red-700;
+}
+
+/* Success states */
+.success-state {
+  @apply border-green-200 bg-green-50 text-green-700;
+}
+
+/* Warning states */
+.warning-state {
+  @apply border-yellow-200 bg-yellow-50 text-yellow-700;
 }

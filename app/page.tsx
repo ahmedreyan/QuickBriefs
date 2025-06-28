@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ResponsiveNavbar } from '@/components/ui/responsive-navbar';
+import { LazyImage } from '@/components/ui/lazy-image';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, 
@@ -22,6 +24,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
+import { SecurityService, PerformanceMonitor } from '@/lib/security';
 
 export default function HomePage() {
   const [stats, setStats] = useState({
@@ -31,6 +34,11 @@ export default function HomePage() {
   });
 
   useEffect(() => {
+    // Initialize security and performance monitoring
+    SecurityService.enforceHTTPS();
+    SecurityService.setupCSPReporting();
+    PerformanceMonitor.measurePageLoad();
+
     // Animate counters from 0
     const animateCounter = (target: number, setter: (value: number) => void, duration: number = 2000) => {
       let start = 0;
@@ -89,61 +97,24 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <motion.nav 
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="border-b bg-background/80 backdrop-blur-xl sticky top-0 z-50"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <motion.div 
-              className="flex items-center space-x-3"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-background" />
-              </div>
-              <span className="text-xl font-bold">QuickBriefs.ai</span>
-            </motion.div>
-            <div className="flex items-center space-x-6">
-              <Link href="/about">
-                <Button variant="ghost" className="text-sm">About</Button>
-              </Link>
-              <Link href="/docs">
-                <Button variant="ghost" className="text-sm">Documentation</Button>
-              </Link>
-              <Link href="/community">
-                <Button variant="ghost" className="text-sm">Community</Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="ghost" className="text-sm">Pricing</Button>
-              </Link>
-              <Link href="/auth/login">
-                <Button variant="outline" size="sm">Sign In</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
+      <ResponsiveNavbar />
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 leading-tight">
               Turn Any Content Into
               <span className="block mt-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Clear Summaries
               </span>
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
               Whether it's a lengthy article, YouTube video, or research paper, our AI transforms 
               complex content into digestible insights tailored to your needs.
             </p>
@@ -152,14 +123,24 @@ export default function HomePage() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
               <Link href="/app">
                 <Button 
                   size="lg" 
-                  className="px-12 py-4 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 touch-target"
                 >
-                  Summarize
-                  <ArrowRight className="ml-3 w-6 h-6" />
+                  Start Summarizing
+                  <ArrowRight className="ml-3 w-5 h-5 sm:w-6 sm:h-6" />
+                </Button>
+              </Link>
+              <Link href="/docs">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg touch-target"
+                >
+                  View Documentation
                 </Button>
               </Link>
             </motion.div>
@@ -179,33 +160,36 @@ export default function HomePage() {
       {/* Live Stats */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
+              className="space-y-2"
             >
-              <div className="text-4xl font-bold mb-2">{stats.summariesGenerated.toLocaleString()}</div>
-              <div className="text-muted-foreground">Summaries Generated</div>
+              <div className="text-3xl sm:text-4xl font-bold">{stats.summariesGenerated.toLocaleString()}</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Summaries Generated</div>
             </motion.div>
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
+              className="space-y-2"
             >
-              <div className="text-4xl font-bold mb-2">{stats.activeUsers.toLocaleString()}</div>
-              <div className="text-muted-foreground">Active Users</div>
+              <div className="text-3xl sm:text-4xl font-bold">{stats.activeUsers.toLocaleString()}</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Active Users</div>
             </motion.div>
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
+              className="space-y-2"
             >
-              <div className="text-4xl font-bold mb-2">{stats.timeSaved}</div>
-              <div className="text-muted-foreground">Hours Saved Today</div>
+              <div className="text-3xl sm:text-4xl font-bold">{stats.timeSaved}</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Hours Saved Today</div>
             </motion.div>
           </div>
         </div>
@@ -221,13 +205,13 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4">Everything You Need</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything You Need</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
               Powerful features designed to make content consumption effortless and efficient
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="fluid-grid">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -241,10 +225,10 @@ export default function HomePage() {
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-xl flex items-center justify-center text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-all duration-300">
                       {feature.icon}
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground text-center leading-relaxed">
+                    <p className="text-muted-foreground text-center leading-relaxed text-sm sm:text-base">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -265,8 +249,8 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-xl text-muted-foreground">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground">
               Three simple steps to transform any content into actionable insights
             </p>
           </motion.div>
@@ -300,8 +284,8 @@ export default function HomePage() {
                 <div className="w-16 h-16 mx-auto mb-6 bg-foreground text-background rounded-full flex items-center justify-center text-2xl font-bold">
                   {item.step}
                 </div>
-                <h3 className="text-xl font-semibold mb-4">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">{item.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -317,10 +301,10 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl font-bold mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
               Ready to Save Hours Every Week?
             </h2>
-            <p className="text-xl text-background/80 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-background/80 mb-12 max-w-3xl mx-auto leading-relaxed">
               Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters.
             </p>
             
@@ -329,17 +313,17 @@ export default function HomePage() {
                 <Button 
                   size="lg" 
                   variant="secondary"
-                  className="px-12 py-4 text-lg"
+                  className="px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg touch-target"
                 >
                   Start Summarizing Now
-                  <ArrowRight className="ml-3 w-6 h-6" />
+                  <ArrowRight className="ml-3 w-5 h-5 sm:w-6 sm:h-6" />
                 </Button>
               </Link>
               <Link href="/docs">
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="px-12 py-4 text-lg border-background/20 text-background hover:bg-background/10"
+                  className="px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg border-background/20 text-background hover:bg-background/10 touch-target"
                 >
                   Learn More
                 </Button>
@@ -352,8 +336,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-muted/30 py-12 px-4 sm:px-6 lg:px-8 border-t">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
                   <Zap className="w-5 h-5 text-background" />
@@ -379,6 +363,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
                 <li><Link href="/community" className="hover:text-foreground transition-colors">Community</Link></li>
+                <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
               </ul>
             </div>
             
