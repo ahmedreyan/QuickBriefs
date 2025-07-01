@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ResponsiveNavbar } from '@/components/ui/responsive-navbar';
 import { motion } from 'framer-motion';
 import { 
@@ -18,7 +17,6 @@ import {
   Sparkles, 
   Clock, 
   User,
-  CreditCard,
   Copy,
   Download,
   RefreshCw,
@@ -33,7 +31,8 @@ import {
   TrendingUp,
   Code,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,7 +49,6 @@ export default function AppPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const [summaryData, setSummaryData] = useState<any>(null);
-  const [credits, setCredits] = useState({ used: 2, total: 3 });
   const [totalSummaries, setTotalSummaries] = useState(0);
   const [error, setError] = useState('');
 
@@ -76,7 +74,10 @@ export default function AppPage() {
   }, []);
 
   const handleGenerate = async () => {
-    if (credits.used >= credits.total || !content.trim()) return;
+    if (!content.trim()) {
+      setError('Please enter some content to summarize');
+      return;
+    }
     
     // Validate input based on type
     if (inputType === 'url' && !SecurityService.validateInput(content, 'url')) {
@@ -108,7 +109,6 @@ export default function AppPage() {
 
       setSummary(data.summary);
       setSummaryData(data);
-      setCredits(prev => ({ ...prev, used: prev.used + 1 }));
       setTotalSummaries(prev => prev + 1);
       toast.success('Summary generated successfully!');
     } catch (error) {
@@ -231,7 +231,7 @@ export default function AppPage() {
         {/* Navigation */}
         <ResponsiveNavbar 
           isAuthenticated={true}
-          userCredits={credits}
+          userCredits={{ used: 0, total: -1 }}
           notifications={0}
         />
 
@@ -253,6 +253,15 @@ export default function AppPage() {
                 <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
                   Transform any content into intelligent summaries powered by Google Gemini AI
                 </p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    <Heart className="w-3 h-3 mr-1" />
+                    100% Free Forever
+                  </Badge>
+                  <Badge variant="outline">
+                    Unlimited Usage
+                  </Badge>
+                </div>
               </motion.div>
 
               {/* Generator Card */}
@@ -382,7 +391,7 @@ export default function AppPage() {
                     {/* Generate Button */}
                     <Button
                       onClick={handleGenerate}
-                      disabled={!content.trim() || isLoading || credits.used >= credits.total}
+                      disabled={!content.trim() || isLoading}
                       className="w-full py-3 text-sm sm:text-base touch-target-lg"
                       size="lg"
                     >
@@ -394,26 +403,15 @@ export default function AppPage() {
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-3" />
-                          Generate Summary ({credits.total - credits.used} credits left)
+                          Generate Free Summary
                         </>
                       )}
                     </Button>
 
-                    {credits.used >= credits.total && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-4 sm:py-6 bg-orange-50 rounded-lg border border-orange-200"
-                      >
-                        <p className="text-orange-700 mb-3 sm:mb-4 text-sm sm:text-base">You&apos;ve used all your free credits today!</p>
-                        <Link href="/pricing">
-                          <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50 touch-target">
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            Upgrade for More Credits
-                          </Button>
-                        </Link>
-                      </motion.div>
-                    )}
+                    <div className="text-center py-4 sm:py-6 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-green-700 mb-2 text-sm sm:text-base font-medium">🎉 QuickBriefs.ai is completely free!</p>
+                      <p className="text-green-600 text-xs sm:text-sm">No limits, no subscriptions, no hidden costs. Generate unlimited summaries.</p>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -529,34 +527,28 @@ export default function AppPage() {
                 </Card>
               </motion.div>
 
-              {/* Credits Card */}
+              {/* Free Service Info */}
               <motion.div variants={itemVariants}>
-                <Card className="shadow-lg">
+                <Card className="shadow-lg bg-green-50 border-green-200">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-base sm:text-lg">
-                      <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Daily Credits
+                    <CardTitle className="flex items-center gap-3 text-base sm:text-lg text-green-800">
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Always Free
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 sm:space-y-4">
-                      <div>
-                        <div className="flex justify-between text-xs sm:text-sm mb-2 text-muted-foreground">
-                          <span>Today&apos;s Usage</span>
-                          <span className="font-semibold">{credits.used}/{credits.total}</span>
-                        </div>
-                        <Progress 
-                          value={(credits.used / credits.total) * 100} 
-                          className="h-2"
-                        />
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold mb-1 text-green-700">∞</div>
+                        <div className="text-xs sm:text-sm text-green-600">Unlimited Summaries</div>
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Free credits reset daily at midnight. Upgrade for unlimited access and premium features.
+                      <p className="text-xs sm:text-sm text-green-700 leading-relaxed text-center">
+                        QuickBriefs.ai is completely free forever. No limits, no subscriptions, no hidden costs.
                       </p>
                       <Link href="/pricing">
-                        <Button className="w-full touch-target text-sm">
+                        <Button className="w-full touch-target text-sm bg-green-600 hover:bg-green-700">
                           <Star className="w-4 h-4 mr-2" />
-                          Get Unlimited Access
+                          Learn More About Our Mission
                         </Button>
                       </Link>
                     </div>
@@ -574,22 +566,22 @@ export default function AppPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 sm:space-y-3">
-                    <Link href="/app/history" className="block">
-                      <Button variant="outline" className="w-full justify-start touch-target text-sm">
-                        <History className="w-4 h-4 mr-3" />
-                        View History
-                      </Button>
-                    </Link>
-                    <Link href="/app/templates" className="block">
+                    <Link href="/docs" className="block">
                       <Button variant="outline" className="w-full justify-start touch-target text-sm">
                         <FileText className="w-4 h-4 mr-3" />
-                        Templates
+                        Documentation
                       </Button>
                     </Link>
-                    <Link href="/app/settings" className="block">
+                    <Link href="/community" className="block">
                       <Button variant="outline" className="w-full justify-start touch-target text-sm">
-                        <User className="w-4 h-4 mr-3" />
-                        Settings
+                        <Users className="w-4 h-4 mr-3" />
+                        Community
+                      </Button>
+                    </Link>
+                    <Link href="/about" className="block">
+                      <Button variant="outline" className="w-full justify-start touch-target text-sm">
+                        <Heart className="w-4 h-4 mr-3" />
+                        About Us
                       </Button>
                     </Link>
                   </CardContent>

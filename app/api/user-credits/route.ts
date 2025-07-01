@@ -1,39 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Mock user credits data (in production, this would come from Supabase)
-const userCredits = new Map([
-  ['user_1', { used: 2, total: 3, subscription: 'free', lastReset: new Date().toDateString() }],
-  ['user_2', { used: 45, total: -1, subscription: 'premium', lastReset: null }],
-]);
-
+// Since the service is now completely free, this endpoint returns unlimited usage
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'user_1'; // Default for demo
+    const userId = searchParams.get('userId') || 'anonymous';
 
-    const credits = userCredits.get(userId) || {
-      used: 0,
-      total: 3,
-      subscription: 'free',
-      lastReset: new Date().toDateString()
-    };
-
-    // Check if daily reset is needed for free users
-    if (credits.subscription === 'free') {
-      const today = new Date().toDateString();
-      if (credits.lastReset !== today) {
-        credits.used = 0;
-        credits.lastReset = today;
-        userCredits.set(userId, credits);
-      }
-    }
-
+    // Return unlimited usage for all users since the service is free
     return NextResponse.json({
-      used: credits.used,
-      total: credits.total,
-      remaining: credits.total === -1 ? 'unlimited' : Math.max(0, credits.total - credits.used),
-      subscription: credits.subscription,
-      resetTime: credits.subscription === 'free' ? 'daily' : 'none'
+      used: 0,
+      total: -1, // -1 indicates unlimited
+      remaining: 'unlimited',
+      subscription: 'free',
+      resetTime: 'none',
+      message: 'QuickBriefs.ai is completely free with unlimited usage!'
     });
 
   } catch (error) {
@@ -48,35 +28,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId, action } = await request.json();
-    const currentUserId = userId || 'user_1';
 
     if (action === 'use_credit') {
-      const credits = userCredits.get(currentUserId) || {
-        used: 0,
-        total: 3,
-        subscription: 'free',
-        lastReset: new Date().toDateString()
-      };
-
-      // Check if user has available credits
-      if (credits.subscription === 'free' && credits.used >= credits.total) {
-        return NextResponse.json(
-          { error: 'Daily credit limit exceeded' },
-          { status: 403 }
-        );
-      }
-
-      // Increment used credits (except for unlimited premium users)
-      if (credits.subscription !== 'premium') {
-        credits.used += 1;
-        userCredits.set(currentUserId, credits);
-      }
-
+      // Since the service is free, always allow usage
       return NextResponse.json({
         success: true,
-        used: credits.used,
-        total: credits.total,
-        remaining: credits.total === -1 ? 'unlimited' : Math.max(0, credits.total - credits.used)
+        used: 0,
+        total: -1,
+        remaining: 'unlimited',
+        message: 'Summary generated successfully! QuickBriefs.ai is free to use.'
       });
     }
 

@@ -20,7 +20,9 @@ import {
   Brain,
   Clock,
   Star,
-  MessageSquare
+  MessageSquare,
+  Heart,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { SecurityService, PerformanceMonitor } from '@/lib/security';
@@ -79,18 +81,18 @@ export default function HomePage() {
     },
     {
       icon: <Brain className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "AI-Powered Intelligence",
-      description: "Advanced algorithms understand context and extract key insights"
+      title: "Google Gemini AI",
+      description: "Powered by Google's advanced Gemini AI for intelligent content understanding"
     },
     {
       icon: <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />,
       title: "Multiple Formats",
-      description: "Choose from business briefs, study notes, or Gen Z-style breakdowns"
+      description: "Choose from business briefs, study notes, code explanations, or Gen Z-style breakdowns"
     },
     {
-      icon: <Clock className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Lightning Fast",
-      description: "Get comprehensive summaries in under 10 seconds"
+      icon: <Heart className="w-6 h-6 sm:w-8 sm:h-8" />,
+      title: "Always Free",
+      description: "Completely free forever with unlimited usage - no hidden costs or subscriptions"
     }
   ];
 
@@ -144,6 +146,18 @@ export default function HomePage() {
             animate="visible"
             className="text-center"
           >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="mb-6"
+            >
+              <Badge className="px-4 py-2 bg-green-100 text-green-800 border-green-200 text-sm">
+                <Heart className="w-4 h-4 mr-2" />
+                100% Free Forever • No Limits • No Subscriptions
+              </Badge>
+            </motion.div>
+
             <motion.h1 
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 sm:mb-8 leading-tight"
               initial={{ y: 50, opacity: 0 }}
@@ -167,8 +181,8 @@ export default function HomePage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              Whether it's a lengthy article, YouTube video, or research paper, our AI transforms 
-              complex content into digestible insights tailored to your needs.
+              Whether it's a lengthy article, YouTube video, or research paper, our Google Gemini AI transforms 
+              complex content into digestible insights tailored to your needs. Completely free, forever.
             </motion.p>
 
             <motion.div
@@ -182,7 +196,7 @@ export default function HomePage() {
                   size="lg" 
                   className="w-full sm:w-auto px-6 sm:px-8 lg:px-12 py-3 sm:py-4 text-base sm:text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 touch-target-lg transition-all duration-300 hover:scale-105"
                 >
-                  Start Summarizing
+                  Start Summarizing Free
                   <ArrowRight className="ml-3 w-5 h-5 sm:w-6 sm:h-6" />
                 </Button>
               </Link>
@@ -203,7 +217,7 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.0 }}
             >
-              Free to start • No credit card required • Get results in seconds
+              No registration required • Unlimited usage • Powered by Google Gemini AI
             </motion.p>
           </motion.div>
         </div>
@@ -221,14 +235,14 @@ export default function HomePage() {
           >
             <motion.div variants={itemVariants} className="space-y-2">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats.summariesGenerated.toLocaleString()}</div>
-              <div className="text-muted-foreground text-sm sm:text-base">Summaries Generated</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Free Summaries Generated</div>
             </motion.div>
             <motion.div variants={itemVariants} className="space-y-2">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats.activeUsers.toLocaleString()}</div>
-              <div className="text-muted-foreground text-sm sm:text-base">Active Users</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Active Users Today</div>
             </motion.div>
             <motion.div variants={itemVariants} className="space-y-2">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats.timeSaved}</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600">{stats.timeSaved}</div>
               <div className="text-muted-foreground text-sm sm:text-base">Hours Saved Today</div>
             </motion.div>
           </motion.div>
@@ -245,9 +259,9 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Everything You Need</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Everything You Need, Completely Free</h2>
             <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Powerful features designed to make content consumption effortless and efficient
+              Powerful AI-driven features designed to make content consumption effortless and efficient
             </p>
           </motion.div>
 
@@ -316,12 +330,12 @@ export default function HomePage() {
               {
                 step: "2", 
                 title: "Choose Your Format",
-                description: "Select from business brief, student summary, or Gen Z-style breakdown based on your needs."
+                description: "Select from business brief, student summary, code explainer, or Gen Z-style breakdown based on your needs."
               },
               {
                 step: "3",
                 title: "Get Your Summary",
-                description: "Receive a clear, concise summary in seconds. Copy, download, or share your results instantly."
+                description: "Receive a clear, structured summary with TL;DR and key points in seconds. Copy, download, or share your results instantly."
               }
             ].map((item, index) => (
               <motion.div
@@ -353,11 +367,15 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
+            <Badge className="mb-6 px-4 py-2 bg-green-600 text-white border-green-500">
+              <Heart className="w-4 h-4 mr-2" />
+              Always Free • No Catch
+            </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
               Ready to Save Hours Every Week?
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-background/80 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-              Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters.
+              Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters. Completely free, forever.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -381,6 +399,10 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
+            
+            <p className="text-sm text-background/60 mt-6">
+              No registration required • No hidden costs • Unlimited usage
+            </p>
           </motion.div>
         </div>
       </section>
@@ -397,7 +419,7 @@ export default function HomePage() {
                 <span className="text-lg font-bold">QuickBriefs.ai</span>
               </div>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                Transform any content into clear, actionable summaries with the power of AI.
+                Transform any content into clear, actionable summaries with the power of AI. Always free, always powerful.
               </p>
             </div>
             
@@ -406,7 +428,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/app" className="hover:text-foreground transition-colors">Summarize</Link></li>
                 <li><Link href="/docs" className="hover:text-foreground transition-colors">Documentation</Link></li>
-                <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><Link href="/pricing" className="hover:text-foreground transition-colors">Features</Link></li>
               </ul>
             </div>
             
@@ -432,7 +454,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 QuickBriefs.ai. All rights reserved.</p>
+            <p>&copy; 2025 QuickBriefs.ai. All rights reserved. Free AI summarization for everyone.</p>
           </div>
         </div>
       </footer>
