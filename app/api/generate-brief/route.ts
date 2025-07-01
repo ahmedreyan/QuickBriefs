@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate summary using Gemini
+    // Generate summary using AI
     const summary = await GeminiService.generateSummary({
       content: processedContent,
       mode,
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       inputType,
       processingTime: summary.processingTime,
       timestamp: summary.timestamp,
-      audience: this.getAudienceForMode(mode)
+      audience: getAudienceForMode(mode)
     });
 
   } catch (error) {
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     
     // Return appropriate error message
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    const statusCode = this.getErrorStatusCode(errorMessage);
+    const statusCode = getErrorStatusCode(errorMessage);
 
     return NextResponse.json(
       { 

@@ -22,7 +22,8 @@ import {
   Star,
   MessageSquare,
   Heart,
-  Globe
+  Globe,
+  Chrome
 } from 'lucide-react';
 import Link from 'next/link';
 import { SecurityService, PerformanceMonitor } from '@/lib/security';
@@ -81,8 +82,8 @@ export default function HomePage() {
     },
     {
       icon: <Brain className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Google Gemini AI",
-      description: "Powered by Google's advanced Gemini AI for intelligent content understanding"
+      title: "Advanced AI",
+      description: "Powered by cutting-edge AI for intelligent content understanding and analysis"
     },
     {
       icon: <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />,
@@ -92,7 +93,7 @@ export default function HomePage() {
     {
       icon: <Heart className="w-6 h-6 sm:w-8 sm:h-8" />,
       title: "Always Free",
-      description: "Completely free forever with unlimited usage - no hidden costs or subscriptions"
+      description: "Start with 3 free summaries, then sign in for premium features and unlimited access"
     }
   ];
 
@@ -137,6 +138,25 @@ export default function HomePage() {
       {/* Navigation */}
       <ResponsiveNavbar />
 
+      {/* Browser Extension Banner */}
+      <motion.div 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4"
+      >
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 text-sm sm:text-base">
+            <Chrome className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="font-medium">Coming Soon:</span>
+            <span>Browser Extension for 1-click summarization anywhere on the web</span>
+            <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+              Beta Feature
+            </Badge>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Hero Section */}
       <section className="relative pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
@@ -154,7 +174,7 @@ export default function HomePage() {
             >
               <Badge className="px-4 py-2 bg-green-100 text-green-800 border-green-200 text-sm">
                 <Heart className="w-4 h-4 mr-2" />
-                100% Free Forever • No Limits • No Subscriptions
+                🔥 Now in Beta • Start Free • Premium Features Available
               </Badge>
             </motion.div>
 
@@ -181,8 +201,8 @@ export default function HomePage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              Whether it's a lengthy article, YouTube video, or research paper, our Google Gemini AI transforms 
-              complex content into digestible insights tailored to your needs. Completely free, forever.
+              Whether it's a lengthy article, YouTube video, or research paper, our advanced AI transforms 
+              complex content into digestible insights tailored to your needs. Start free, upgrade for premium features.
             </motion.p>
 
             <motion.div
@@ -217,7 +237,7 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.0 }}
             >
-              No registration required • Unlimited usage • Powered by Google Gemini AI
+              3 free summaries to start • Sign in for premium features • Powered by advanced AI
             </motion.p>
           </motion.div>
         </div>
@@ -235,7 +255,7 @@ export default function HomePage() {
           >
             <motion.div variants={itemVariants} className="space-y-2">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats.summariesGenerated.toLocaleString()}</div>
-              <div className="text-muted-foreground text-sm sm:text-base">Free Summaries Generated</div>
+              <div className="text-muted-foreground text-sm sm:text-base">Summaries Generated</div>
             </motion.div>
             <motion.div variants={itemVariants} className="space-y-2">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats.activeUsers.toLocaleString()}</div>
@@ -259,7 +279,7 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Everything You Need, Completely Free</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Everything You Need to Get Started</h2>
             <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
               Powerful AI-driven features designed to make content consumption effortless and efficient
             </p>
@@ -335,7 +355,7 @@ export default function HomePage() {
               {
                 step: "3",
                 title: "Get Your Summary",
-                description: "Receive a clear, structured summary with TL;DR and key points in seconds. Copy, download, or share your results instantly."
+                description: "Receive a clear, structured summary with TL;DR and key points in seconds. Copy, download, or save your results."
               }
             ].map((item, index) => (
               <motion.div
@@ -358,6 +378,101 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Premium Features Preview */}
+      <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <motion.div 
+            className="text-center mb-12 sm:mb-16"
+            initial={{ y: 50, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Unlock Premium Features</h2>
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Sign in after your first 3 summaries to unlock advanced features and unlimited access
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <motion.div variants={itemVariants}>
+              <Card className="h-full shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-purple-500" />
+                    Free Features
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>3 high-quality summaries</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>All 4 summary modes</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>URL and text processing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Download summaries</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <Card className="h-full shadow-lg border-purple-200 bg-purple-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <Star className="w-6 h-6 text-purple-500" />
+                    Premium Features
+                    <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                      Beta Feature
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>Unlimited summaries</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>Full PDF processing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>YouTube video analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>Summary history & search</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>Priority performance</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-purple-500" />
+                    <span>Early access to new features</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Enhanced CTA Section */}
       <section className="py-20 sm:py-24 lg:py-32 bg-foreground text-background px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -369,13 +484,13 @@ export default function HomePage() {
           >
             <Badge className="mb-6 px-4 py-2 bg-green-600 text-white border-green-500">
               <Heart className="w-4 h-4 mr-2" />
-              Always Free • No Catch
+              Start Free • Premium Available
             </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
               Ready to Save Hours Every Week?
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-background/80 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-              Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters. Completely free, forever.
+              Stop spending hours reading through lengthy content. Get the insights you need in seconds with AI-powered summarization that understands context and delivers exactly what matters.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -401,7 +516,7 @@ export default function HomePage() {
             </div>
             
             <p className="text-sm text-background/60 mt-6">
-              No registration required • No hidden costs • Unlimited usage
+              3 free summaries to start • Sign in for premium features • Advanced AI powered
             </p>
           </motion.div>
         </div>
@@ -419,7 +534,7 @@ export default function HomePage() {
                 <span className="text-lg font-bold">QuickBriefs.ai</span>
               </div>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                Transform any content into clear, actionable summaries with the power of AI. Always free, always powerful.
+                Transform any content into clear, actionable summaries with the power of AI. Start free, upgrade for premium features.
               </p>
             </div>
             
@@ -444,7 +559,7 @@ export default function HomePage() {
             <div>
               <h3 className="font-semibold mb-4">Connect</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="https://discord.gg/SNtfZUjrqD" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-2">
+                <li><a href="https://discord.gg/D4tWx9QqwB" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
                   Discord Community
                 </a></li>
@@ -454,7 +569,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 QuickBriefs.ai. All rights reserved. Free AI summarization for everyone.</p>
+            <p>&copy; 2025 QuickBriefs.ai. All rights reserved. AI summarization for everyone.</p>
           </div>
         </div>
       </footer>

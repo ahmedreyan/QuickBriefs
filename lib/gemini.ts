@@ -1,6 +1,6 @@
-// Google Gemini API integration for text summarization
+// AI integration for text summarization (provider abstracted)
 
-interface GeminiResponse {
+interface SummaryResponse {
   candidates: Array<{
     content: {
       parts: Array<{
@@ -16,7 +16,7 @@ interface SummaryRequest {
   inputType: 'url' | 'youtube' | 'upload';
 }
 
-interface SummaryResponse {
+interface SummaryResult {
   tldr: string;
   keyPoints: string[];
   originalWordCount: number;
@@ -29,7 +29,7 @@ interface SummaryResponse {
 
 export class GeminiService {
   private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-  private static readonly MAX_CONTENT_LENGTH = 30000; // Gemini Pro limit
+  private static readonly MAX_CONTENT_LENGTH = 30000;
   private static readonly TIMEOUT_MS = 30000; // 30 second timeout
 
   // Summary mode prompts
@@ -87,7 +87,7 @@ Focus on: practical understanding, real-world applications, simplified explanati
 Focus on: being real, practical value, current vibes, and making complex stuff actually understandable. Keep it authentic but informative - we're not trying to be cringe here.`
   };
 
-  static async generateSummary(request: SummaryRequest): Promise<SummaryResponse> {
+  static async generateSummary(request: SummaryRequest): Promise<SummaryResult> {
     const startTime = Date.now();
 
     try {
@@ -97,11 +97,11 @@ Focus on: being real, practical value, current vibes, and making complex stuff a
       // Get the appropriate prompt
       const prompt = this.buildPrompt(request.content, request.mode);
 
-      // Call Gemini API
-      const geminiResponse = await this.callGeminiAPI(prompt);
+      // Call AI API
+      const aiResponse = await this.callAIAPI(prompt);
 
       // Parse and format response
-      const summary = this.parseGeminiResponse(geminiResponse);
+      const summary = this.parseAIResponse(aiResponse);
 
       // Calculate metrics
       const originalWordCount = this.countWords(request.content);
@@ -121,7 +121,7 @@ Focus on: being real, practical value, current vibes, and making complex stuff a
       };
 
     } catch (error) {
-      console.error('Gemini API Error:', error);
+      console.error('AI API Error:', error);
       throw new Error(this.getErrorMessage(error));
     }
   }
@@ -150,11 +150,11 @@ Focus on: being real, practical value, current vibes, and making complex stuff a
     return `${basePrompt}\n\nContent to summarize:\n\n${content}`;
   }
 
-  private static async callGeminiAPI(prompt: string): Promise<GeminiResponse> {
+  private static async callAIAPI(prompt: string): Promise<SummaryResponse> {
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-      throw new Error('Gemini API key not configured');
+      throw new Error('AI API key not configured');
     }
 
     const controller = new AbortController();
@@ -204,7 +204,7 @@ Focus on: being real, practical value, current vibes, and making complex stuff a
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        throw new Error(`AI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       return await response.json();
@@ -220,15 +220,15 @@ Focus on: being real, practical value, current vibes, and making complex stuff a
     }
   }
 
-  private static parseGeminiResponse(response: GeminiResponse): { tldr: string; keyPoints: string[] } {
+  private static parseAIResponse(response: SummaryResponse): { tldr: string; keyPoints: string[] } {
     if (!response.candidates || response.candidates.length === 0) {
-      throw new Error('No response generated from Gemini API');
+      throw new Error('No response generated from AI API');
     }
 
     const text = response.candidates[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
-      throw new Error('Empty response from Gemini API');
+      throw new Error('Empty response from AI API');
     }
 
     // Parse the structured response

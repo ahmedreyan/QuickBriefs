@@ -103,8 +103,16 @@ export default function CommunityPage() {
             Connect with fellow users, share insights, get support, and help shape the future of QuickBriefs.ai. 
             Our Discord community is the heart of everything we do.
           </p>
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+              🔥 Beta Community
+            </Badge>
+            <Badge variant="outline">
+              Early Access Features
+            </Badge>
+          </div>
           <a 
-            href="https://discord.gg/SNtfZUjrqD" 
+            href="https://discord.gg/D4tWx9QqwB" 
             target="_blank" 
             rel="noopener noreferrer"
           >
@@ -160,6 +168,51 @@ export default function CommunityPage() {
           </div>
         </motion.div>
 
+        {/* Beta Features Preview */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-16"
+        >
+          <Card className="shadow-lg bg-purple-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-2xl text-purple-800">
+                <Star className="w-7 h-7 text-purple-500" />
+                Beta Community Benefits
+                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                  Beta Feature
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="leading-relaxed text-purple-700">
+                As a beta community member, you'll get exclusive access to:
+              </p>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-3 text-purple-800">🚀 Early Access</h3>
+                  <ul className="space-y-2 text-sm text-purple-700">
+                    <li>• Preview new features before public release</li>
+                    <li>• Test browser extension beta versions</li>
+                    <li>• Influence product development direction</li>
+                    <li>• Direct feedback channel to our team</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-3 text-purple-800">💡 Community Perks</h3>
+                  <ul className="space-y-2 text-sm text-purple-700">
+                    <li>• Priority support and assistance</li>
+                    <li>• Feature request voting power</li>
+                    <li>• Beta tester recognition badges</li>
+                    <li>• Exclusive community events and AMAs</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Community Guidelines */}
         <motion.div
           initial={{ y: 50, opacity: 0 }}
@@ -184,7 +237,7 @@ export default function CommunityPage() {
                   <ul className="space-y-2 text-sm">
                     <li>• Asking questions, no matter how basic</li>
                     <li>• Sharing your use cases and success stories</li>
-                    <li>• Providing constructive feedback</li>
+                    <li>• Providing constructive feedback on beta features</li>
                     <li>• Helping other community members</li>
                     <li>• Suggesting new features and improvements</li>
                   </ul>
@@ -254,11 +307,20 @@ export default function CommunityPage() {
               { name: "🆘 support", desc: "Get help with QuickBriefs.ai" },
               { name: "💡 feature-requests", desc: "Suggest new features and improvements" },
               { name: "🎯 use-cases", desc: "Share how you use QuickBriefs.ai" },
-              { name: "📢 announcements", desc: "Latest updates and news" }
+              { name: "🧪 beta-testing", desc: "Test new features and provide feedback", beta: true },
+              { name: "📢 announcements", desc: "Latest updates and news" },
+              { name: "🔧 browser-extension", desc: "Beta testing for upcoming extension", beta: true }
             ].map((channel, index) => (
               <Card key={index} className="shadow-lg">
                 <CardContent className="p-4">
-                  <div className="font-mono text-sm font-semibold mb-2">{channel.name}</div>
+                  <div className="font-mono text-sm font-semibold mb-2 flex items-center gap-2">
+                    {channel.name}
+                    {channel.beta && (
+                      <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                        Beta
+                      </Badge>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">{channel.desc}</div>
                 </CardContent>
               </Card>
@@ -282,7 +344,7 @@ export default function CommunityPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a 
-                  href="https://discord.gg/SNtfZUjrqD" 
+                  href="https://discord.gg/D4tWx9QqwB" 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

@@ -15,7 +15,9 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Chrome,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,7 +28,7 @@ export default function DocsPage() {
       description: "Select how you want to input your content",
       options: [
         { icon: <FileText className="w-5 h-5" />, name: "URL/Blog", desc: "Paste any website or blog URL" },
-        { icon: <Youtube className="w-5 h-5" />, name: "YouTube", desc: "Enter a YouTube video URL" },
+        { icon: <Youtube className="w-5 h-5" />, name: "YouTube", desc: "Enter a YouTube video URL (Premium)", premium: true },
         { icon: <Upload className="w-5 h-5" />, name: "Text Upload", desc: "Paste text directly or upload a document" }
       ]
     },
@@ -36,7 +38,8 @@ export default function DocsPage() {
       options: [
         { icon: <Settings className="w-5 h-5" />, name: "Business Brief", desc: "Executive insights and action items" },
         { icon: <FileText className="w-5 h-5" />, name: "Student Summary", desc: "Educational notes and key concepts" },
-        { icon: <Settings className="w-5 h-5" />, name: "Code Explainer", desc: "Technical concepts simplified" }
+        { icon: <Settings className="w-5 h-5" />, name: "Code Explainer", desc: "Technical concepts simplified" },
+        { icon: <Settings className="w-5 h-5" />, name: "Gen Z Style", desc: "Casual and relatable tone" }
       ]
     },
     {
@@ -44,8 +47,8 @@ export default function DocsPage() {
       description: "Receive your AI-generated summary in seconds",
       options: [
         { icon: <Copy className="w-5 h-5" />, name: "Copy Text", desc: "Copy to clipboard for easy sharing" },
-        { icon: <Download className="w-5 h-5" />, name: "Download", desc: "Save as PDF or text file" },
-        { icon: <Clock className="w-5 h-5" />, name: "Save History", desc: "Access your summaries anytime (with account)" }
+        { icon: <Download className="w-5 h-5" />, name: "Download", desc: "Save as Markdown file" },
+        { icon: <Clock className="w-5 h-5" />, name: "Save History", desc: "Access your summaries anytime (Premium)", premium: true }
       ]
     }
   ];
@@ -61,7 +64,7 @@ export default function DocsPage() {
       type: "warning", 
       icon: <AlertCircle className="w-5 h-5 text-orange-500" />,
       title: "Content Limits",
-      content: "Text input is limited to 10,000 characters. For longer content, consider breaking it into sections or using URL input instead."
+      content: "Text input is limited to 30,000 characters. For longer content, consider breaking it into sections or using URL input instead."
     },
     {
       type: "info",
@@ -78,11 +81,11 @@ export default function DocsPage() {
     },
     {
       question: "How accurate are the summaries?",
-      answer: "Our AI achieves 98%+ accuracy by using advanced language models trained specifically for summarization. The system understands context and maintains the original meaning while condensing content."
+      answer: "Our AI achieves high accuracy by using advanced language models trained specifically for summarization. The system understands context and maintains the original meaning while condensing content."
     },
     {
       question: "Can I customize the summary length?",
-      answer: "Currently, summaries are optimized to around 100 words for maximum clarity and usefulness. Premium users will soon have access to custom length options."
+      answer: "Currently, summaries are optimized for clarity and usefulness with TL;DR sections and key points. Premium users will soon have access to custom length options."
     },
     {
       question: "What languages are supported?",
@@ -93,8 +96,8 @@ export default function DocsPage() {
       answer: "We prioritize your privacy. Content is processed securely and not stored permanently. Summaries are only saved if you have an account and choose to save them."
     },
     {
-      question: "How do I get more credits?",
-      answer: "Free users get 3 summaries per day. Create an account for additional features, or upgrade to Premium for unlimited summaries and advanced features."
+      question: "How do I get premium features?",
+      answer: "Start with 3 free summaries, then sign in to unlock premium features including unlimited summaries, YouTube processing, PDF support, and summary history."
     }
   ];
 
@@ -128,10 +131,55 @@ export default function DocsPage() {
           className="text-center mb-16"
         >
           <h1 className="text-5xl font-bold mb-6">Documentation</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
             Everything you need to know to get the most out of QuickBriefs.ai. 
             From basic usage to advanced tips and tricks.
           </p>
+          <div className="flex items-center justify-center gap-2">
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+              🔥 Beta
+            </Badge>
+            <Badge variant="outline">
+              Updated for Latest Features
+            </Badge>
+          </div>
+        </motion.div>
+
+        {/* Browser Extension Preview */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-16"
+        >
+          <Card className="shadow-lg bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <Chrome className="w-7 h-7 text-blue-600" />
+                Coming Soon: Browser Extension
+                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                  Beta Feature
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg text-muted-foreground mb-4">
+                Get ready for 1-click summarization anywhere on the web! Our browser extension will let you 
+                summarize any article, blog post, or webpage instantly without leaving your current tab.
+              </p>
+              <div className="flex items-center gap-4">
+                <Button variant="outline" disabled>
+                  <Chrome className="w-4 h-4 mr-2" />
+                  Add to Chrome (Coming Soon)
+                </Button>
+                <a href="https://discord.gg/D4tWx9QqwB" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline">
+                    Join Beta Testing
+                  </Button>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Quick Start Guide */}
@@ -159,7 +207,12 @@ export default function DocsPage() {
                 <CardContent>
                   <div className="grid md:grid-cols-3 gap-4">
                     {step.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg">
+                      <div key={optionIndex} className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg relative">
+                        {option.premium && (
+                          <Badge className="absolute top-2 right-2 bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                            Premium
+                          </Badge>
+                        )}
                         <div className="text-muted-foreground mt-1">
                           {option.icon}
                         </div>
@@ -209,7 +262,7 @@ export default function DocsPage() {
           className="mb-16"
         >
           <h2 className="text-3xl font-bold mb-8">Summary Formats Explained</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {[
               {
                 title: "Business Brief",
@@ -228,6 +281,12 @@ export default function DocsPage() {
                 badge: "Technical", 
                 description: "Ideal for developers and technical professionals dealing with complex documentation.",
                 features: ["Code breakdown", "Technical concepts", "Implementation guide", "Best practices", "Examples"]
+              },
+              {
+                title: "Gen Z Style",
+                badge: "Casual", 
+                description: "Relatable summaries with modern language that cuts through the noise.",
+                features: ["Casual tone", "Current references", "Practical value", "Authentic language", "No corporate speak"]
               }
             ].map((format, index) => (
               <Card key={index} className="shadow-lg">
@@ -250,6 +309,82 @@ export default function DocsPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </motion.div>
+
+        {/* Premium Features */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold mb-8">Free vs Premium Features</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-blue-500" />
+                  Free Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>3 high-quality summaries</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>All 4 summary modes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>URL and text processing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>Download summaries</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg border-purple-200 bg-purple-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-purple-800">
+                  <Star className="w-5 h-5 text-purple-500" />
+                  Premium Features
+                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                    Beta Feature
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>Unlimited summaries</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>YouTube video processing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>Full PDF processing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>Summary history & search</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>Priority performance</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-purple-500" />
+                  <span>Early access to new features</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </motion.div>
 
@@ -290,11 +425,11 @@ export default function DocsPage() {
                 Start Summarizing
               </Button>
             </Link>
-            <Link href="/community">
+            <a href="https://discord.gg/D4tWx9QqwB" target="_blank" rel="noopener noreferrer">
               <Button size="lg" variant="outline" className="px-8">
                 Join Community
               </Button>
-            </Link>
+            </a>
           </div>
         </motion.div>
       </div>
