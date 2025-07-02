@@ -21,18 +21,21 @@ export class ContentExtractor {
         throw new Error('Only HTTP and HTTPS URLs are supported');
       }
 
-      // Use a CORS proxy service for client-side requests
-      // In production, you'd want to use your own proxy or server-side scraping
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
       try {
-        const response = await fetch(proxyUrl, {
+        // Fetch content directly from the URL
+        const response = await fetch(url, {
           signal: controller.signal,
           headers: {
-            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
           }
         });
 
@@ -42,8 +45,7 @@ export class ContentExtractor {
           throw new Error(`Failed to fetch content: ${response.status}`);
         }
 
-        const data = await response.json();
-        const htmlContent = data.contents;
+        const htmlContent = await response.text();
 
         if (!htmlContent) {
           throw new Error('No content received from URL');
