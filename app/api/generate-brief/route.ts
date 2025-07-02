@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSystemPrompt } from '@/lib/system-prompts';
 
 interface SummaryRequest {
   content: string;
@@ -98,9 +99,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      summary: summary.tldr,
-      keyPoints: summary.keyPoints,
-      tldr: summary.tldr,
+      summary: summary.summary,
       originalWordCount: summary.originalWordCount,
       summaryWordCount: summary.summaryWordCount,
       reductionPercentage: summary.reductionPercentage,
@@ -205,13 +204,12 @@ async function generateSummary(request: {
 
     // Calculate metrics
     const originalWordCount = countWords(request.content);
-    const summaryWordCount = countWords(summary.tldr + ' ' + summary.keyPoints.join(' '));
+    const summaryWordCount = countWords(summary);
     const reductionPercentage = Math.round(((originalWordCount - summaryWordCount) / originalWordCount) * 100);
     const processingTime = Date.now() - startTime;
 
     return {
-      tldr: summary.tldr,
-      keyPoints: summary.keyPoints,
+      summary,
       originalWordCount,
       summaryWordCount,
       reductionPercentage,
@@ -226,62 +224,8 @@ async function generateSummary(request: {
 }
 
 function buildPrompt(content: string, mode: string): string {
-  const prompts = {
-    business: `You are a sharp business analyst. Analyze the following content and provide a summary in this EXACT format:
-
-**TL;DR:** [2-3 sentence paragraph with key business insights, strategic implications, and actionable takeaways]
-
-**Key Points:**
-• [Strategic insight or market opportunity]
-• [Actionable recommendation with business impact]
-• [Financial/operational implication]
-• [Risk assessment or competitive advantage]
-• [Implementation priority or next steps]
-
-Focus on: ROI, market positioning, competitive advantages, strategic decisions, and business value. Be direct, data-driven, and executive-ready.`,
-
-    student: `You are a friendly study buddy. Break down the following content into an easy-to-understand summary in this EXACT format:
-
-**TL;DR:** [2-3 sentences explaining the main concept in simple, clear language that's perfect for studying]
-
-**Key Points:**
-• [Main concept explained simply]
-• [Important fact or principle to remember]
-• [Practical application or example]
-• [Connection to broader topic or field]
-• [Study tip or memory aid]
-
-Focus on: core concepts, learning objectives, practical examples, and study-friendly explanations.`,
-
-    code: `You are a patient coding mentor. Explain the following technical content in this EXACT format:
-
-**TL;DR:** [2-3 sentences explaining what the code/concept does in plain English, focusing on the "why" and "how"]
-
-**Key Points:**
-• [What this code/concept actually does]
-• [How it works (simplified explanation)]
-• [When and why you'd use it]
-• [Common gotchas or important details]
-• [Best practices or next steps]
-
-Focus on: practical understanding, real-world applications, simplified explanations, and actionable insights.`,
-
-    genZ: `You're the coolest tech friend who explains things without being cringe. Break down this content in this EXACT format:
-
-**TL;DR:** [2-3 sentences that hit different - explain the main vibe in a way that actually makes sense, no cap]
-
-**Key Points:**
-• [Main point that actually slaps]
-• [Something that's lowkey important to know]
-• [Real talk about why this matters]
-• [The tea on how to use this info]
-• [Final thoughts that are chef's kiss]
-
-Focus on: being real, practical value, current vibes, and making complex stuff actually understandable. Keep it authentic but informative.`
-  };
-
-  const basePrompt = prompts[mode as keyof typeof prompts] || prompts.business;
-  return `${basePrompt}\n\nContent to summarize:\n\n${content}`;
+  const systemPrompt = getSystemPrompt(mode);
+  return `${systemPrompt}\n\nContent to summarize:\n\n${content}`;
 }
 
 async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
@@ -311,7 +255,7 @@ async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
           temperature: 0.3,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048, // Increased for longer paragraph responses
         },
         safetySettings: [
           {
@@ -355,7 +299,7 @@ async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
   }
 }
 
-function parseAIResponse(response: GeminiResponse): { tldr: string; keyPoints: string[] } {
+function parseAIResponse(response: GeminiResponse): string {
   if (!response.candidates || response.candidates.length === 0) {
     throw new Error('No response generated from AI service');
   }
@@ -366,47 +310,8 @@ function parseAIResponse(response: GeminiResponse): { tldr: string; keyPoints: s
     throw new Error('Empty response from AI service');
   }
 
-  // Parse the structured response
-  const tldrMatch = text.match(/\*\*TL;DR:\*\*\s*(.*?)(?=\*\*Key Points:\*\*)/s);
-  const keyPointsMatch = text.match(/\*\*Key Points:\*\*\s*(.*?)$/s);
-
-  if (!tldrMatch || !keyPointsMatch) {
-    // Fallback parsing if format doesn't match exactly
-    return fallbackParsing(text);
-  }
-
-  const tldr = tldrMatch[1].trim();
-  const keyPointsText = keyPointsMatch[1].trim();
-  
-  // Extract bullet points
-  const keyPoints = keyPointsText
-    .split(/[•\-\*]\s*/)
-    .filter(point => point.trim().length > 0)
-    .map(point => point.trim())
-    .slice(0, 5); // Limit to 5 key points
-
-  return {
-    tldr: tldr || 'Summary generated successfully.',
-    keyPoints: keyPoints.length > 0 ? keyPoints : ['Key insights extracted from content.']
-  };
-}
-
-function fallbackParsing(text: string): { tldr: string; keyPoints: string[] } {
-  // Split text into sentences and take first few as TL;DR
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const tldr = sentences.slice(0, 2).join('. ').trim() + '.';
-  
-  // Extract any bullet points or numbered items
-  const bulletPoints = text.match(/[•\-\*\d+\.]\s*[^\n•\-\*\d+\.]+/g) || [];
-  const keyPoints = bulletPoints
-    .map(point => point.replace(/^[•\-\*\d+\.]\s*/, '').trim())
-    .filter(point => point.length > 10)
-    .slice(0, 5);
-
-  return {
-    tldr: tldr || 'Content summarized successfully.',
-    keyPoints: keyPoints.length > 0 ? keyPoints : ['Key insights extracted from the provided content.']
-  };
+  // Return the full text as paragraphs (no parsing needed for paragraph format)
+  return text.trim();
 }
 
 function countWords(text: string): number {
