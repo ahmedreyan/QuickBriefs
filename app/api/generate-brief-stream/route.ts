@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 interface SummaryRequest {
   content: string;
@@ -17,34 +17,41 @@ interface GeminiResponse {
 }
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-  
   try {
     const { content, mode, inputType }: SummaryRequest = await request.json();
 
     // Validate input
     if (!content || !mode) {
-      return NextResponse.json(
-        { error: 'Content and mode are required' },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: 'Content and mode are required' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
     // Validate mode
     const validModes = ['business', 'student', 'code', 'genZ'];
     if (!validModes.includes(mode)) {
-      return NextResponse.json(
-        { error: 'Invalid summary mode' },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: 'Invalid summary mode' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
     // Validate input type
     const validInputTypes = ['url', 'youtube', 'upload'];
     if (!validInputTypes.includes(inputType)) {
-      return NextResponse.json(
-        { error: 'Invalid input type' },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: 'Invalid input type' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -54,7 +61,6 @@ export async function POST(request: NextRequest) {
     try {
       switch (inputType) {
         case 'url':
-          // Validate URL format
           new URL(content);
           processedContent = await extractFromUrl(content);
           break;
@@ -62,76 +68,146 @@ export async function POST(request: NextRequest) {
           processedContent = await extractFromYouTube(content);
           break;
         case 'upload':
-          // Content is already text, just validate length
           if (content.length > 30000) {
-            return NextResponse.json(
-              { error: 'Content exceeds maximum length limit (30,000 characters)' },
-              { status: 400 }
+            return new Response(
+              JSON.stringify({ error: 'Content exceeds maximum length limit (30,000 characters)' }),
+              { 
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+              }
             );
           }
           processedContent = content;
           break;
       }
     } catch (error) {
-      return NextResponse.json(
-        { error: `Failed to process ${inputType}: ${error instanceof Error ? error.message : 'Unknown error'}` },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: `Failed to process ${inputType}: ${error instanceof Error ? error.message : 'Unknown error'}` }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
-    // Generate summary using AI
-    const summary = await generateSummary({
-      content: processedContent,
-      mode,
-      inputType
+    // Create streaming response
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Send initial status
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'status', 
+            message: 'Processing content...' 
+          })}\n\n`));
+
+          // Generate summary
+          const summary = await generateSummary({
+            content: processedContent,
+            mode,
+            inputType
+          });
+
+          // Stream TL;DR with typing effect
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'tldr_start',
+            message: 'Generating summary...'
+          })}\n\n`));
+
+          await streamText(controller, encoder, summary.tldr, 'tldr');
+
+          // Stream key points
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'keypoints_start',
+            message: 'Extracting key points...'
+          })}\n\n`));
+
+          for (let i = 0; i < summary.keyPoints.length; i++) {
+            await streamText(controller, encoder, summary.keyPoints[i], 'keypoint', i);
+          }
+
+          // Send final metadata
+          const originalWordCount = countWords(processedContent);
+          const summaryWordCount = countWords(summary.tldr + ' ' + summary.keyPoints.join(' '));
+          const reductionPercentage = Math.round(((originalWordCount - summaryWordCount) / originalWordCount) * 100);
+
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'complete',
+            metadata: {
+              originalWordCount,
+              summaryWordCount,
+              reductionPercentage,
+              mode,
+              inputType,
+              timestamp: new Date().toISOString(),
+              audience: getAudienceForMode(mode)
+            }
+          })}\n\n`));
+
+          controller.close();
+        } catch (error) {
+          console.error('Streaming error:', error);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'error',
+            error: error instanceof Error ? error.message : 'An unexpected error occurred'
+          })}\n\n`));
+          controller.close();
+        }
+      }
     });
 
-    // Log successful request
-    console.log('Summary generated:', {
-      mode,
-      inputType,
-      originalWords: summary.originalWordCount,
-      summaryWords: summary.summaryWordCount,
-      reduction: summary.reductionPercentage,
-      processingTime: summary.processingTime
-    });
-
-    return NextResponse.json({
-      success: true,
-      summary: summary.tldr,
-      keyPoints: summary.keyPoints,
-      tldr: summary.tldr,
-      originalWordCount: summary.originalWordCount,
-      summaryWordCount: summary.summaryWordCount,
-      reductionPercentage: summary.reductionPercentage,
-      mode: summary.mode,
-      inputType,
-      processingTime: summary.processingTime,
-      timestamp: summary.timestamp,
-      audience: getAudienceForMode(mode)
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
     });
 
   } catch (error) {
-    console.error('Error generating brief:', error);
-    
-    // Return appropriate error message
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    const statusCode = getErrorStatusCode(errorMessage);
-
-    return NextResponse.json(
+    console.error('Error in streaming endpoint:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Internal server error'
+      }),
       { 
-        error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error : undefined
-      },
-      { status: statusCode }
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
+  }
+}
+
+async function streamText(
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+  text: string,
+  type: 'tldr' | 'keypoint',
+  index?: number
+) {
+  const words = text.split(' ');
+  let currentText = '';
+  
+  for (let i = 0; i < words.length; i++) {
+    currentText += (i > 0 ? ' ' : '') + words[i];
+    
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+      type: type === 'tldr' ? 'tldr_chunk' : 'keypoint_chunk',
+      text: currentText,
+      index: index,
+      isComplete: i === words.length - 1
+    })}\n\n`));
+    
+    // Add delay for typing effect (faster for better UX)
+    await new Promise(resolve => setTimeout(resolve, 50));
   }
 }
 
 async function extractFromUrl(url: string): Promise<string> {
   try {
-    // For demo purposes, we'll simulate content extraction
-    // In production, you'd use a web scraping service
     return `This is extracted content from the URL: ${url}. 
 
 In a real implementation, this would contain the actual article content scraped from the webpage. The content would include the main article text, headlines, and relevant information while filtering out navigation, ads, and other non-content elements.
@@ -158,7 +234,6 @@ async function extractFromYouTube(url: string): Promise<string> {
       throw new Error('Invalid YouTube URL format');
     }
 
-    // For demo purposes, simulate transcript extraction
     return `This is a simulated transcript from YouTube video: ${videoId}
 
 In a real implementation, this would contain the actual video transcript obtained through the YouTube API or transcript extraction services.
@@ -196,28 +271,15 @@ async function generateSummary(request: {
   mode: string;
   inputType: string;
 }) {
-  const startTime = Date.now();
-
   try {
     const prompt = buildPrompt(request.content, request.mode);
     const aiResponse = await callGeminiAPI(prompt);
     const summary = parseAIResponse(aiResponse);
 
-    // Calculate metrics
-    const originalWordCount = countWords(request.content);
-    const summaryWordCount = countWords(summary.tldr + ' ' + summary.keyPoints.join(' '));
-    const reductionPercentage = Math.round(((originalWordCount - summaryWordCount) / originalWordCount) * 100);
-    const processingTime = Date.now() - startTime;
-
     return {
       tldr: summary.tldr,
       keyPoints: summary.keyPoints,
-      originalWordCount,
-      summaryWordCount,
-      reductionPercentage,
-      mode: request.mode,
-      processingTime,
-      timestamp: new Date().toISOString()
+      mode: request.mode
     };
   } catch (error) {
     console.error('AI API Error:', error);
@@ -295,7 +357,6 @@ async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    // Fixed: Use gemini-1.5-flash for free tier instead of gemini-pro
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -371,19 +432,17 @@ function parseAIResponse(response: GeminiResponse): { tldr: string; keyPoints: s
   const keyPointsMatch = text.match(/\*\*Key Points:\*\*\s*(.*?)$/s);
 
   if (!tldrMatch || !keyPointsMatch) {
-    // Fallback parsing if format doesn't match exactly
     return fallbackParsing(text);
   }
 
   const tldr = tldrMatch[1].trim();
   const keyPointsText = keyPointsMatch[1].trim();
   
-  // Extract bullet points
   const keyPoints = keyPointsText
     .split(/[•\-\*]\s*/)
     .filter(point => point.trim().length > 0)
     .map(point => point.trim())
-    .slice(0, 5); // Limit to 5 key points
+    .slice(0, 5);
 
   return {
     tldr: tldr || 'Summary generated successfully.',
@@ -392,11 +451,9 @@ function parseAIResponse(response: GeminiResponse): { tldr: string; keyPoints: s
 }
 
 function fallbackParsing(text: string): { tldr: string; keyPoints: string[] } {
-  // Split text into sentences and take first few as TL;DR
   const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
   const tldr = sentences.slice(0, 2).join('. ').trim() + '.';
   
-  // Extract any bullet points or numbered items
   const bulletPoints = text.match(/[•\-\*\d+\.]\s*[^\n•\-\*\d+\.]+/g) || [];
   const keyPoints = bulletPoints
     .map(point => point.replace(/^[•\-\*\d+\.]\s*/, '').trim())
@@ -432,7 +489,7 @@ function getErrorMessage(error: unknown): string {
 function getAudienceForMode(mode: string): string {
   const audiences = {
     business: "business professionals",
-    student: "students",
+    student: "students", 
     code: "developers",
     genZ: "Gen Z"
   };
@@ -440,25 +497,8 @@ function getAudienceForMode(mode: string): string {
   return audiences[mode as keyof typeof audiences] || "general";
 }
 
-function getErrorStatusCode(errorMessage: string): number {
-  if (errorMessage.includes('API key') || errorMessage.includes('configuration')) {
-    return 500; // Server configuration error
-  }
-  if (errorMessage.includes('timeout')) {
-    return 408; // Request timeout
-  }
-  if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
-    return 429; // Too many requests
-  }
-  if (errorMessage.includes('too long') || errorMessage.includes('invalid')) {
-    return 400; // Bad request
-  }
-  return 500; // Default server error
-}
-
-// Handle CORS for future frontend integrations
 export async function OPTIONS() {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
