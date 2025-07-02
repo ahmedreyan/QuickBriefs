@@ -3,20 +3,22 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Validate environment variables - temporarily disabled for development
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables are not set. Please configure your .env file.');
-  // For development, we'll create a mock client to prevent crashes
-  export const supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
-} else if (supabaseUrl === 'your_supabase_url' || 
-           supabaseUrl === 'https://your-project-id.supabase.co' ||
-           supabaseAnonKey === 'your_supabase_anon_key_here') {
-  console.warn('Please update your Supabase environment variables with actual values from your Supabase project.');
-  // For development, we'll create a mock client to prevent crashes
-  export const supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
+// Create supabase client with proper fallback handling
+let supabaseClient;
+
+if (!supabaseUrl || !supabaseAnonKey || 
+    supabaseUrl === 'your_supabase_url' || 
+    supabaseUrl === 'https://your-project-id.supabase.co' ||
+    supabaseAnonKey === 'your_supabase_anon_key_here') {
+  
+  console.warn('Supabase environment variables are not properly configured. Using placeholder client for development.');
+  // Create a placeholder client that won't crash the app
+  supabaseClient = createClient('https://placeholder.supabase.co', 'placeholder-key');
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 }
+
+export const supabase = supabaseClient;
 
 export type Database = {
   public: {
