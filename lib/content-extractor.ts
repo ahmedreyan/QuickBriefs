@@ -1,4 +1,5 @@
 // Production-ready content extraction service
+import * as cheerio from 'cheerio';
 
 interface ExtractedContent {
   title: string;
@@ -111,9 +112,8 @@ Note: Full transcript extraction requires YouTube API integration. This summary 
   }
 
   private static extractContentFromHtml(html: string, sourceUrl: string): ExtractedContent {
-    // Create a temporary DOM element to parse HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use Cheerio to parse HTML (server-side compatible)
+    const $ = cheerio.load(html);
 
     // Remove unwanted elements
     const unwantedSelectors = [
@@ -123,8 +123,7 @@ Note: Full transcript extraction requires YouTube API integration. This summary 
     ];
 
     unwantedSelectors.forEach(selector => {
-      const elements = doc.querySelectorAll(selector);
-      elements.forEach(el => el.remove());
+      $(selector).remove();
     });
 
     // Try to find the main content using common selectors
@@ -142,37 +141,37 @@ Note: Full transcript extraction requires YouTube API integration. This summary 
 
     let mainContent = null;
     for (const selector of contentSelectors) {
-      const element = doc.querySelector(selector);
-      if (element && element.textContent && element.textContent.trim().length > 200) {
+      const element = $(selector);
+      if (element.length && element.text() && element.text().trim().length > 200) {
         mainContent = element;
         break;
       }
     }
 
     // Fallback to body if no main content found
-    if (!mainContent) {
-      mainContent = doc.body || doc.documentElement;
+    if (!mainContent || !mainContent.length) {
+      mainContent = $('body').length ? $('body') : $.root();
     }
 
     // Extract title
     let title = '';
     const titleSelectors = ['h1', '.title', '.headline', '.post-title', '.article-title'];
     for (const selector of titleSelectors) {
-      const titleEl = doc.querySelector(selector);
-      if (titleEl && titleEl.textContent) {
-        title = titleEl.textContent.trim();
+      const titleEl = $(selector);
+      if (titleEl.length && titleEl.text()) {
+        title = titleEl.text().trim();
         break;
       }
     }
 
     // Fallback to page title
     if (!title) {
-      const titleTag = doc.querySelector('title');
-      title = titleTag ? titleTag.textContent?.trim() || '' : '';
+      const titleTag = $('title');
+      title = titleTag.length ? titleTag.text().trim() : '';
     }
 
     // Extract and clean content
-    let content = mainContent ? mainContent.textContent || '' : '';
+    let content = mainContent ? mainContent.text() || '' : '';
     
     // Clean up the content
     content = content
@@ -189,9 +188,9 @@ Note: Full transcript extraction requires YouTube API integration. This summary 
     let author = '';
     const authorSelectors = ['.author', '.byline', '[rel="author"]', '.post-author'];
     for (const selector of authorSelectors) {
-      const authorEl = doc.querySelector(selector);
-      if (authorEl && authorEl.textContent) {
-        author = authorEl.textContent.trim();
+      const authorEl = $(selector);
+      if (authorEl.length && authorEl.text()) {
+        author = authorEl.text().trim();
         break;
       }
     }
@@ -246,14 +245,13 @@ Note: Full transcript extraction requires YouTube API integration. This summary 
 // Alternative content extraction using Readability-like algorithm
 export class ReadabilityExtractor {
   static extractMainContent(html: string): string {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const $ = cheerio.load(html);
 
     // Score paragraphs based on content quality
-    const paragraphs = Array.from(doc.querySelectorAll('p'));
+    const paragraphs = $('p').toArray();
     const scoredParagraphs = paragraphs.map(p => ({
-      element: p,
-      score: this.scoreParagraph(p)
+      element: $(p),
+      score: this.scoreParagraph($(p))
     }));
 
     // Sort by score and take top paragraphs
@@ -261,14 +259,14 @@ export class ReadabilityExtractor {
       .filter(p => p.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 20) // Take top 20 paragraphs
-      .map(p => p.element.textContent?.trim())
+      .map(p => p.element.text()?.trim())
       .filter(text => text && text.length > 50);
 
     return topParagraphs.join('\n\n');
   }
 
-  private static scoreParagraph(paragraph: Element): number {
-    const text = paragraph.textContent || '';
+  private static scoreParagraph(paragraph: cheerio.Cheerio<cheerio.Element>): number {
+    const text = paragraph.text() || '';
     let score = 0;
 
     // Length scoring
