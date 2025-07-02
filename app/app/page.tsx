@@ -33,7 +33,8 @@ import {
   CheckCircle,
   AlertCircle,
   Heart,
-  Lock
+  Lock,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,12 +95,19 @@ export default function AppPage() {
     
     // Validate input based on type
     if (inputType === 'url' && !SecurityService.validateInput(content, 'url')) {
-      setError('Please enter a valid URL');
+      setError('Please enter a valid URL (e.g., https://example.com/article)');
+      return;
+    }
+    
+    if (inputType === 'youtube' && !content.includes('youtube.com') && !content.includes('youtu.be')) {
+      setError('Please enter a valid YouTube URL');
       return;
     }
     
     setIsLoading(true);
     setError('');
+    setSummary('');
+    setSummaryData(null);
     
     try {
       const response = await fetch('/api/generate-brief', {
@@ -404,6 +412,9 @@ export default function AppPage() {
                           onChange={(e) => setContent(e.target.value)}
                           className="mt-2 form-input-mobile"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter any article URL to extract and summarize its content
+                        </p>
                       </div>
                     )}
                     
@@ -502,7 +513,7 @@ export default function AppPage() {
                     {isLoading ? (
                       <>
                         <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-3 animate-spin" />
-                        Generating Summary...
+                        {inputType === 'url' ? 'Extracting & Summarizing...' : 'Generating Summary...'}
                       </>
                     ) : !user && userSummaryCount >= 3 ? (
                       <>
@@ -555,6 +566,11 @@ export default function AppPage() {
                       <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
                         <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
                         Your Summary
+                        {summaryData.sourceInfo && (
+                          <Badge variant="outline" className="text-xs">
+                            {summaryData.sourceInfo}
+                          </Badge>
+                        )}
                       </CardTitle>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={copyToClipboard} className="touch-target">

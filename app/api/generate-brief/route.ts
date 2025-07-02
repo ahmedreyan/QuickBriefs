@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemPrompt } from '@/lib/system-prompts';
+import { ContentExtractor } from '@/lib/content-extractor';
 
 interface SummaryRequest {
   content: string;
@@ -51,17 +52,29 @@ export async function POST(request: NextRequest) {
 
     // Process content based on input type
     let processedContent = content;
+    let sourceInfo = '';
     
     try {
       switch (inputType) {
         case 'url':
           // Validate URL format
-          new URL(content);
-          processedContent = await extractFromUrl(content);
+          if (!ContentExtractor.validateUrl(content)) {
+            throw new Error('Please enter a valid URL (e.g., https://example.com/article)');
+          }
+          
+          sourceInfo = `Source: ${ContentExtractor.getDomainFromUrl(content)}`;
+          processedContent = await ContentExtractor.extractFromUrl(content);
           break;
+          
         case 'youtube':
-          processedContent = await extractFromYouTube(content);
+          if (!ContentExtractor.isYouTubeUrl(content)) {
+            throw new Error('Please enter a valid YouTube URL');
+          }
+          
+          sourceInfo = 'Source: YouTube Video';
+          processedContent = await ContentExtractor.extractFromYouTube(content);
           break;
+          
         case 'upload':
           // Content is already text, just validate length
           if (content.length > 30000) {
@@ -70,12 +83,30 @@ export async function POST(request: NextRequest) {
               { status: 400 }
             );
           }
+          
+          if (content.length < 100) {
+            return NextResponse.json(
+              { error: 'Content too short. Please provide at least 100 characters for meaningful summarization.' },
+              { status: 400 }
+            );
+          }
+          
+          sourceInfo = 'Source: Direct Input';
           processedContent = content;
           break;
       }
     } catch (error) {
+      console.error(`Error processing ${inputType}:`, error);
       return NextResponse.json(
         { error: `Failed to process ${inputType}: ${error instanceof Error ? error.message : 'Unknown error'}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate processed content
+    if (!processedContent || processedContent.trim().length < 50) {
+      return NextResponse.json(
+        { error: 'Insufficient content extracted. Please try a different source or check if the content is accessible.' },
         { status: 400 }
       );
     }
@@ -84,7 +115,8 @@ export async function POST(request: NextRequest) {
     const summary = await generateSummary({
       content: processedContent,
       mode,
-      inputType
+      inputType,
+      sourceInfo
     });
 
     // Log successful request
@@ -94,7 +126,8 @@ export async function POST(request: NextRequest) {
       originalWords: summary.originalWordCount,
       summaryWords: summary.summaryWordCount,
       reduction: summary.reductionPercentage,
-      processingTime: summary.processingTime
+      processingTime: summary.processingTime,
+      source: sourceInfo
     });
 
     return NextResponse.json({
@@ -107,7 +140,8 @@ export async function POST(request: NextRequest) {
       inputType,
       processingTime: summary.processingTime,
       timestamp: summary.timestamp,
-      audience: getAudienceForMode(mode)
+      audience: getAudienceForMode(mode),
+      sourceInfo
     });
 
   } catch (error) {
@@ -127,78 +161,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function extractFromUrl(url: string): Promise<string> {
-  try {
-    // For demo purposes, we'll simulate content extraction
-    // In production, you'd use a web scraping service
-    return `This is extracted content from the URL: ${url}. 
-
-In a real implementation, this would contain the actual article content scraped from the webpage. The content would include the main article text, headlines, and relevant information while filtering out navigation, ads, and other non-content elements.
-
-For now, this is a placeholder that demonstrates the URL processing functionality. The AI will still generate a meaningful summary based on this simulated content extraction.
-
-Key points that would typically be extracted:
-- Article headline and subheadings
-- Main body paragraphs
-- Important quotes or statistics
-- Author and publication information
-- Publication date and source
-
-This simulated content allows the summarization feature to work while the actual web scraping implementation is being developed.`;
-  } catch (error) {
-    throw new Error('Failed to extract content from URL. Please check the URL and try again.');
-  }
-}
-
-async function extractFromYouTube(url: string): Promise<string> {
-  try {
-    const videoId = extractYouTubeVideoId(url);
-    if (!videoId) {
-      throw new Error('Invalid YouTube URL format');
-    }
-
-    // For demo purposes, simulate transcript extraction
-    return `This is a simulated transcript from YouTube video: ${videoId}
-
-In a real implementation, this would contain the actual video transcript obtained through the YouTube API or transcript extraction services.
-
-Sample transcript content:
-"Welcome to today's video where we'll be discussing important topics and sharing valuable insights. Throughout this presentation, we'll cover key concepts, practical applications, and real-world examples that you can apply immediately.
-
-The main points we'll address include strategic thinking, implementation methodologies, and best practices for achieving optimal results. We'll also explore common challenges and provide actionable solutions.
-
-By the end of this video, you'll have a comprehensive understanding of the subject matter and practical tools you can use in your own projects and initiatives."
-
-This simulated transcript allows the AI to generate meaningful summaries while the actual YouTube API integration is being implemented.`;
-  } catch (error) {
-    throw new Error('Failed to extract YouTube transcript. Please check the URL and try again.');
-  }
-}
-
-function extractYouTubeVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      return match[1];
-    }
-  }
-  return null;
-}
-
 async function generateSummary(request: {
   content: string;
   mode: string;
   inputType: string;
+  sourceInfo: string;
 }) {
   const startTime = Date.now();
 
   try {
-    const prompt = buildPrompt(request.content, request.mode);
+    const prompt = buildPrompt(request.content, request.mode, request.sourceInfo);
     const aiResponse = await callGeminiAPI(prompt);
     const summary = parseAIResponse(aiResponse);
 
@@ -223,9 +195,9 @@ async function generateSummary(request: {
   }
 }
 
-function buildPrompt(content: string, mode: string): string {
+function buildPrompt(content: string, mode: string, sourceInfo: string): string {
   const systemPrompt = getSystemPrompt(mode);
-  return `${systemPrompt}\n\nContent to summarize:\n\n${content}`;
+  return `${systemPrompt}\n\n${sourceInfo}\n\nContent to summarize:\n\n${content}`;
 }
 
 async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
@@ -239,7 +211,7 @@ async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    // Fixed: Use gemini-1.5-flash for free tier instead of gemini-pro
+    // Use gemini-1.5-flash for free tier
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
