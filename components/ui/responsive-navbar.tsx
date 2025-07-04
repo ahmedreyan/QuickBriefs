@@ -79,7 +79,7 @@ export function ResponsiveNavbar({
             <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-background" />
             </div>
-            <span className="text-xl font-bold hidden sm:block">QuickBriefs.ai</span>
+            <span className="text-xl font-bold">QuickBriefs</span>
             <span className="text-lg font-bold sm:hidden">QB.ai</span>
           </Link>
 
