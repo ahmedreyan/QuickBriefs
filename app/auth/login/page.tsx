@@ -135,7 +135,7 @@ export default function LoginPage() {
               <div className="w-10 h-10 bg-foreground rounded-lg flex items-center justify-center">
                 <Zap className="w-6 h-6 text-background" />
               </div>
-              <span className="text-2xl font-bold">QuickBriefs.ai</span>
+              <span className="text-2xl font-bold">QuickBriefs</span>
             </Link>
           </motion.div>
 

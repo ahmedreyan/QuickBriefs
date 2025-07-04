@@ -534,7 +534,7 @@ export default function HomePage() {
                 <span className="text-lg font-bold">QuickBriefs</span>
               </div>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                Transform any content into clear, actionable summaries with the power of AI. Start free, upgrade for premium features.
+                Transform any content into clear, actionable summaries with the power of AI.
               </p>
             </div>
             

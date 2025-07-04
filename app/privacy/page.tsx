@@ -87,7 +87,7 @@ export default function PrivacyPage() {
           <h1 className="text-5xl font-bold mb-6">Privacy Policy</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Your privacy is fundamental to everything we do. This policy explains how we collect, 
-            use, and protect your information when you use QuickBriefs.ai.
+            use, and protect your information when you use QuickBriefs.
           </p>
           <p className="text-sm text-muted-foreground mt-4">
             Last updated: January 2025

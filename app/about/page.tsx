@@ -22,7 +22,7 @@ export default function AboutPage() {
             <div className="flex items-center space-x-4">
               <Link href="/app">
                 <Button>Try Now</Button>
-              </Link>
+                  Try QuickBriefs
             </div>
           </div>
         </div>
