@@ -117,6 +117,7 @@ function ResetPasswordForm() {
                     Continue to Login
                   </Button>
                 </Link>
+              </CardContent>
               <span className="text-2xl font-bold">QuickBriefs</span>
             </Card>
           </motion.div>
