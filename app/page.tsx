@@ -531,7 +531,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
                   <Zap className="w-5 h-5 text-background" />
                 </div>
-                <span className="text-lg font-bold">QuickBriefs.ai</span>
+                <span className="text-lg font-bold">QuickBriefs</span>
               </div>
               <p className="text-muted-foreground leading-relaxed text-sm">
                 Transform any content into clear, actionable summaries with the power of AI. Start free, upgrade for premium features.
